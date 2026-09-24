@@ -1,5 +1,5 @@
 import QRCode from "qrcode";
-import { appUrl } from "@/lib/email-verification";
+import { appUrl } from "@/lib/app-url";
 import { certificatePagePath, certificateVerifyPath, linkedInAddUrl as linkedInAddUrlFor } from "@/lib/certificate-share";
 
 /** Public, login-free page that shows the live status of a certificate. Printed on the PDF and encoded in its QR. */

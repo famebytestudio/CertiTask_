@@ -279,6 +279,12 @@ export default function LoginPage() {
               Create account
             </Link>
           </p>
+          <p className="mt-4 text-center text-xs text-ink-muted">
+            Managing the platform?{" "}
+            <Link href="/admin/login" className="font-bold text-navy underline underline-offset-4 hover:text-gold">
+              Super Administrator login
+            </Link>
+          </p>
         </div>
       </div>
     </div>

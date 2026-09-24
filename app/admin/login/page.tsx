@@ -71,103 +71,94 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="auth-root" style={{ background: "var(--navy-dark)" }}>
-      {/* ── Form Panel ──────────────────────────────────────── */}
-      <div className="auth-form-panel" style={{ width: "100%", maxWidth: "500px", margin: "0 auto", padding: "40px" }}>
-        <div className="auth-form-inner">
-          <div className="auth-mobile-logo" style={{ display: "flex", justifyContent: "center", marginBottom: "32px" }}>
-            <Image src="/app-icon-128.png" alt="CertiTask" width={48} height={48} />
+    <div className="relative flex min-h-screen overflow-hidden bg-[#07192d] text-paper">
+      <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-gold/10 blur-3xl" />
+      <div className="absolute -bottom-40 right-1/3 h-[28rem] w-[28rem] rounded-full bg-blue-400/5 blur-3xl" />
+
+      <aside className="relative hidden w-[46%] flex-col justify-between border-r border-white/10 p-10 lg:flex xl:p-16">
+        <div>
+          <div className="flex items-center gap-3">
+            <Image src="/app-icon-128.png" alt="CertiTask" width={42} height={42} className="rounded-xl" />
+            <span className="text-xl font-bold tracking-tight">Certi<span className="text-gold">Task</span></span>
           </div>
+          <div className="mt-28 max-w-md">
+            <p className="text-xs font-bold uppercase tracking-[0.25em] text-gold">Control centre</p>
+            <h1 className="mt-5 text-5xl font-black leading-[1.02] tracking-[-0.04em] xl:text-6xl">
+              Keep the standard <span className="text-gold">high.</span>
+            </h1>
+            <p className="mt-6 max-w-sm text-base leading-relaxed text-paper/60">
+              Review platform activity, protect certificate integrity, and help every project meet the CertiTask standard.
+            </p>
+          </div>
+          <div className="mt-16 grid max-w-md grid-cols-2 gap-3">
+            {["Platform oversight", "Verified credentials", "Secure operations", "Audit-ready records"].map((item) => (
+              <div key={item} className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-xs font-semibold text-paper/70">
+                <span className="mr-2 text-gold">✦</span>{item}
+              </div>
+            ))}
+          </div>
+        </div>
+        <p className="text-xs text-paper/35">© {new Date().getFullYear()} CertiTask · Restricted access</p>
+      </aside>
 
-          <div className="auth-card" style={{ borderTop: "4px solid var(--gold)" }}>
-            <h2 className="auth-heading" style={{ color: "var(--navy-dark)" }}>Super Admin Portal</h2>
-            <p className="auth-sub">Secure access to the administrative dashboard</p>
+      <main className="relative flex flex-1 items-center justify-center px-5 py-10 sm:px-10">
+        <div className="w-full max-w-[440px]">
+          <div className="mb-8 flex items-center gap-3 lg:hidden">
+            <Image src="/app-icon-128.png" alt="CertiTask" width={38} height={38} className="rounded-xl" />
+            <span className="text-lg font-bold">Certi<span className="text-gold">Task</span></span>
+          </div>
+          <div className="rounded-[2rem] border border-white/10 bg-white p-7 text-navy shadow-2xl shadow-black/20 sm:p-10">
+            <div className="mb-8 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-gold">Administrator access</p>
+                <h2 className="mt-3 text-3xl font-black tracking-tight">Welcome back.</h2>
+                <p className="mt-2 text-sm leading-relaxed text-ink-muted">Sign in to manage the CertiTask platform.</p>
+              </div>
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-navy text-gold">
+                <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="1.8">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 3l7 3v5c0 4.5-3 7.5-7 10-4-2.5-7-5.5-7-10V6l7-3z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.5 12l1.7 1.7 3.5-3.5" />
+                </svg>
+              </div>
+            </div>
 
-            <form onSubmit={handleSubmit} noValidate className="mt-8">
-              {/* Email */}
-              <div className="form-group">
-                <label className="form-label" htmlFor="login-email">
-                  Administrator Email
-                </label>
+            <form onSubmit={handleSubmit} noValidate className="space-y-5">
+              <div>
+                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-navy" htmlFor="login-email">Administrator email</label>
                 <div className="input-wrap">
-                  <span className="input-icon">
-                    <MailIcon />
-                  </span>
-                  <input
-                    id="login-email"
-                    type="email"
-                    className={`form-input${error ? " has-error" : ""}`}
-                    placeholder="admin@certitask.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    autoComplete="email"
-                  />
+                  <span className="input-icon"><MailIcon /></span>
+                  <input id="login-email" type="email" className={`form-input${error ? " has-error" : ""}`} placeholder="admin@certitask.com" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+                </div>
+              </div>
+              <div>
+                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-navy" htmlFor="login-password">Password</label>
+                <div className="input-wrap">
+                  <span className="input-icon"><LockIcon /></span>
+                  <input id="login-password" type={showPass ? "text" : "password"} className={`form-input${error ? " has-error" : ""}`} placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
+                  <button type="button" className="input-btn" onClick={() => setShowPass((v) => !v)} aria-label={showPass ? "Hide password" : "Show password"}><EyeIcon visible={showPass} /></button>
                 </div>
               </div>
 
-              {/* Password */}
-              <div className="form-group">
-                <div className="flex items-center justify-between">
-                  <label className="form-label" htmlFor="login-password">
-                    Password
-                  </label>
-                </div>
-                <div className="input-wrap">
-                  <span className="input-icon">
-                    <LockIcon />
-                  </span>
-                  <input
-                    id="login-password"
-                    type={showPass ? "text" : "password"}
-                    className={`form-input${error ? " has-error" : ""}`}
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    autoComplete="current-password"
-                  />
-                  <button
-                    type="button"
-                    className="input-btn"
-                    onClick={() => setShowPass((v) => !v)}
-                    aria-label={showPass ? "Hide password" : "Show password"}
-                  >
-                    <EyeIcon visible={showPass} />
-                  </button>
-                </div>
-              </div>
-
-              {/* Error */}
               {error && (
-                <div className="field-error mb-4">
+                <div className="field-error">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: 14, height: 14, flexShrink: 0 }}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-3.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                   </svg>
                   {error}
                 </div>
               )}
 
-              <button
-                type="submit"
-                id="login-submit"
-                className={`btn-primary mt-4${loading ? " loading" : ""}`}
-                disabled={loading || !email || !password}
-                style={{ background: "var(--navy-dark)" }}
-              >
-                {loading ? (
-                  <>
-                    <span className="spinner" />
-                    Authenticating…
-                  </>
-                ) : (
-                  "Secure Login"
-                )}
+              <button type="submit" id="login-submit" className={`btn-primary mt-2${loading ? " loading" : ""}`} disabled={loading || !email || !password}>
+                {loading ? <><span className="spinner" />Authenticating…</> : "Enter admin console"}
               </button>
             </form>
           </div>
+          <p className="mt-6 text-center text-xs text-paper/45">
+            Not an administrator?{" "}
+            <a href="/auth/login" className="font-bold text-gold hover:underline">Return to regular login</a>
+          </p>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

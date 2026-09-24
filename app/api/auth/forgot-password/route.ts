@@ -2,6 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isSmtpConfigured, sendPasswordResetEmail } from "@/lib/email";
+import { appUrl } from "@/lib/app-url";
 import { isRateLimited } from "@/lib/rate-limit";
 import { isEmail } from "@/lib/validation";
 
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
     }
 
-    if (!isSmtpConfigured() || !process.env.APP_URL) {
+    if (!isSmtpConfigured()) {
       return NextResponse.json({ error: "Password reset is temporarily unavailable." }, { status: 503 });
     }
 
@@ -50,13 +51,9 @@ export async function POST(req: Request) {
       });
 
       try {
-        const appUrl = new URL(process.env.APP_URL);
-        if (process.env.NODE_ENV === "production" && appUrl.protocol !== "https:") {
-          throw new Error("APP_URL must use HTTPS in production");
-        }
         await sendPasswordResetEmail(
           user.email,
-          `${appUrl.origin}/auth/reset-password?token=${rawToken}`
+          `${appUrl()}/auth/reset-password?token=${rawToken}`
         );
       } catch {
         await prisma.passwordResetToken.delete({ where: { id: token.id } });

@@ -1,15 +1,14 @@
 import { createHash, randomBytes } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { sendVerifyEmailEmail } from "@/lib/email";
+import { appUrl } from "@/lib/app-url";
+
+export { appUrl };
 
 const TTL_MS = 24 * 60 * 60 * 1000;
 
 function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
-}
-
-export function appUrl(): string {
-  return (process.env.APP_URL || "http://localhost:3000").replace(/\/$/, "");
 }
 
 /** Create a fresh single-use token (invalidating older ones) and email the link. */
@@ -21,8 +20,8 @@ export async function sendEmailVerification(user: { id: string; email: string; n
       data: { userId: user.id, tokenHash: hashToken(raw), expiresAt: new Date(Date.now() + TTL_MS) },
     }),
   ]);
-  const url = `${appUrl()}/auth/verify-email?token=${raw}`;
   try {
+    const url = `${appUrl()}/auth/verify-email?token=${raw}`;
     await sendVerifyEmailEmail(user.email, user.name, url);
   } catch (err) {
     console.error("verification email failed:", err);

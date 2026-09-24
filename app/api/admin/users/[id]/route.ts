@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { appUrl } from "@/lib/app-url";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { audit } from "@/lib/audit";
@@ -67,7 +68,7 @@ export async function PATCH(request: Request, { params }: Params) {
 
     const target = await prisma.user.findUnique({ where: { id }, select: { id: true, name: true, email: true, role: true, suspendedAt: true, emailVerifiedAt: true, verificationStatus: true } });
     if (!target) return NextResponse.json({ error: "User not found" }, { status: 404 });
-    const dashboard = `${process.env.APP_URL ?? ""}/${target.role === "CLIENT" ? "client" : "talent"}/dashboard`;
+    const dashboard = `${appUrl()}/${target.role === "CLIENT" ? "client" : "talent"}/dashboard`;
 
     if (action === "RESEND_VERIFICATION_EMAIL") {
       if (target.emailVerifiedAt) return NextResponse.json({ error: "This email address is already confirmed" }, { status: 409 });
