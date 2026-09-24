@@ -4,9 +4,9 @@ import { BillingError, startCheckout } from "@/lib/billing";
 import { PLAN_TIERS, type PlanTier } from "@/lib/plans";
 import { isRateLimited } from "@/lib/rate-limit";
 
-/** POST /api/billing/checkout { plan } — start a hosted checkout; returns the URL to send the client to. */
+/** POST /api/billing/checkout { plan } — start a hosted checkout for a client or talent. */
 export async function POST(req: Request) {
-  const auth = await requireRole("CLIENT");
+  const auth = await requireRole("CLIENT", "TALENT");
   if (auth instanceof NextResponse) return auth;
   if (await isRateLimited(`checkout:${auth.userId}`, 10, 60 * 60 * 1000)) {
     return NextResponse.json({ error: "Too many checkout attempts. Try again later." }, { status: 429 });

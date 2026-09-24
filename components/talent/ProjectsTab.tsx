@@ -8,6 +8,7 @@ import { api } from "@/components/dashboard/useDashboardData";
 import { PROJECT_CATEGORIES, PROJECT_CATEGORY_LABEL, CLIENT_TYPE_LABEL } from "@/lib/enums";
 import type { ApplicationDto, ProjectDto, SubmissionDto, TeamFullDto } from "@/lib/types";
 import type { TalentTab } from "@/app/talent/dashboard/page";
+import { PlanRequiredModal } from "@/components/client/PlanRequiredModal";
 
 export function ProjectsTab({ projects, applications, submissions, teams, onChanged, goTo }: {
   projects: ProjectDto[]; applications: ApplicationDto[]; submissions: SubmissionDto[]; teams: TeamFullDto[]; onChanged: () => void; goTo: (t: TalentTab) => void;
@@ -29,6 +30,7 @@ export function ProjectsTab({ projects, applications, submissions, teams, onChan
   const [form, setForm] = useState({ teamName: "", pitch: "" });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [planModal, setPlanModal] = useState<"PLAN_REQUIRED" | "LIMIT_REACHED" | null>(null);
 
   const visible = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -68,7 +70,7 @@ export function ProjectsTab({ projects, applications, submissions, teams, onChan
     setBusy(true); setError(null);
     const res = await api("/api/applications", "POST", { projectId: applying.id, ...form });
     setBusy(false);
-    if (!res.ok) { setError(res.error ?? "Could not apply"); return; }
+    if (!res.ok) { if (res.code === "PLAN_REQUIRED" || res.code === "LIMIT_REACHED") { setPlanModal(res.code); return; } setError(res.error ?? "Could not apply"); return; }
     setApplying(null); setForm({ teamName: "", pitch: "" });
     onChanged();
     goTo("applications");
@@ -172,6 +174,7 @@ export function ProjectsTab({ projects, applications, submissions, teams, onChan
           </form>
         </Modal>
       )}
+      {planModal && <PlanRequiredModal reason={planModal} audience="talent" onClose={() => setPlanModal(null)} />}
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { applicationInclude } from "@/lib/queries";
 import { audit } from "@/lib/audit";
 import { notify } from "@/lib/notifications";
 import { isOnAnotherTeam, teamInclude } from "@/lib/teams";
+import { BillingError, consumeApplication } from "@/lib/billing";
 
 /**
  * GET /api/applications
@@ -62,6 +63,7 @@ export async function POST(req: Request) {
       if (accepted.length > team.project.teamCap) return NextResponse.json({ error: `This project allows teams of up to ${team.project.teamCap}` }, { status: 409 });
       const pending = team.members.filter((m) => m.status === "INVITED").length + team.invites.length;
       const application = await prisma.$transaction(async (tx) => {
+        await consumeApplication(tx, auth.userId);
         // Open invitations lapse once the roster is frozen.
         if (pending > 0) {
           await tx.teamMember.updateMany({ where: { teamId, status: "INVITED" }, data: { status: "EXPIRED" } });
@@ -95,6 +97,7 @@ export async function POST(req: Request) {
     }
 
     const application = await prisma.$transaction(async (tx) => {
+      await consumeApplication(tx, auth.userId);
       const team = await tx.team.create({
         data: {
           name: teamName.trim(),
@@ -115,6 +118,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, application });
   } catch (error) {
+    if (error instanceof BillingError) return NextResponse.json({ error: error.message, code: error.code, billing: error.code }, { status: error.status });
     console.error("Submit application error:", error);
     return NextResponse.json({ error: "Failed to submit application" }, { status: 500 });
   }

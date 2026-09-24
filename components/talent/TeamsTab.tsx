@@ -6,6 +6,7 @@ import { Btn, Card, EmptyState, Field, Modal, Notice, SectionHeader, StatusBadge
 import { api } from "@/components/dashboard/useDashboardData";
 import type { TeamFullDto } from "@/lib/types";
 import type { TalentTab } from "@/app/talent/dashboard/page";
+import { PlanRequiredModal } from "@/components/client/PlanRequiredModal";
 
 const MEMBER_LABEL: Record<string, string> = { INVITED: "Invited", ACCEPTED: "Member", DECLINED: "Declined", REMOVED: "Removed", EXPIRED: "Invite expired", LEFT: "Left" };
 
@@ -17,16 +18,17 @@ export function TeamsTab({ teams, meId, onChanged, goTo }: { teams: TeamFullDto[
   const [applyFor, setApplyFor] = useState<TeamFullDto | null>(null);
   const [pitch, setPitch] = useState("");
   const [info, setInfo] = useState<string | null>(null);
+  const [planModal, setPlanModal] = useState<"PLAN_REQUIRED" | "LIMIT_REACHED" | null>(null);
 
   const myInvites = teams.filter(t => t.members.some(m => m.user.id === meId && m.status === "INVITED"));
   // Solo applications create a one-person team behind the scenes; only real teams belong here.
   const myTeams = teams.filter(t => t.members.some(m => m.user.id === meId && m.status === "ACCEPTED") && t.project.teamCap > 1);
 
-  async function act(key: string, fn: () => Promise<{ ok: boolean; error?: string }>, okMsg?: string) {
+  async function act(key: string, fn: () => Promise<{ ok: boolean; error?: string; code?: string }>, okMsg?: string) {
     setError(null); setInfo(null); setBusy(key);
     const r = await fn();
     setBusy(null);
-    if (!r.ok) { setError(r.error ?? "Something went wrong"); return false; }
+    if (!r.ok) { if (r.code === "PLAN_REQUIRED" || r.code === "LIMIT_REACHED") { setPlanModal(r.code); setBusy(null); return false; } setError(r.error ?? "Something went wrong"); return false; }
     if (okMsg) setInfo(okMsg);
     onChanged();
     return true;
@@ -169,6 +171,7 @@ export function TeamsTab({ teams, meId, onChanged, goTo }: { teams: TeamFullDto[
           </form>
         </Modal>
       )}
+      {planModal && <PlanRequiredModal reason={planModal} audience="talent" onClose={() => setPlanModal(null)} />}
     </div>
   );
 }

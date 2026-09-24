@@ -10,8 +10,8 @@ export interface PlanCatalogItem {
  * Plan comparison cards, used by /pricing and the in-dashboard picker.
  * `current` marks the active plan; `onChoose` (when given) turns cards into buttons.
  */
-export function PlanCards({ plans, current, onChoose, busy, compact }: {
-  plans: PlanCatalogItem[]; current?: PlanTier | null; onChoose?: (tier: PlanTier) => void; busy?: PlanTier | null; compact?: boolean;
+export function PlanCards({ plans, current, onChoose, busy, compact, quotaLabel = "project post" }: {
+  plans: PlanCatalogItem[]; current?: PlanTier | null; onChoose?: (tier: PlanTier) => void; busy?: PlanTier | null; compact?: boolean; quotaLabel?: string;
 }) {
   const rank: Record<PlanTier, number> = { STARTER: 1, GROWTH: 2, PRO: 3 };
   return (
@@ -27,9 +27,9 @@ export function PlanCards({ plans, current, onChoose, busy, compact }: {
             <div style={{ fontSize: 13, fontWeight: 700, color: "var(--ink-subtle)", textTransform: "uppercase", letterSpacing: 1 }}>{p.name}</div>
             <div style={{ fontSize: compact ? 28 : 36, fontWeight: 800, color: "var(--navy)", margin: "6px 0 0", lineHeight: 1 }}>{p.price}<span style={{ fontSize: 13, fontWeight: 600, color: "var(--ink-subtle)" }}> / 30 days</span></div>
             <div style={{ fontSize: 12, color: "var(--ink-muted)", margin: "6px 0 14px" }}>{p.tagline}</div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "var(--navy)", marginBottom: 10 }}>{p.postLimit === null ? "Unlimited" : p.postLimit} project post{p.postLimit === 1 ? "" : "s"}</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "var(--navy)", marginBottom: 10 }}>{p.postLimit === null ? "Unlimited" : p.postLimit} {quotaLabel}{p.postLimit === 1 ? "" : "s"}</div>
             <ul style={{ listStyle: "none", padding: 0, margin: "0 0 16px", display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
-              {p.perks.map(k => <li key={k} style={{ fontSize: 13, color: "var(--ink-muted)", display: "flex", gap: 8 }}><span style={{ color: "var(--success)", fontWeight: 800 }}>✓</span>{k}</li>)}
+              {p.perks.map(k => <li key={k} style={{ fontSize: 13, color: "var(--ink-muted)", display: "flex", gap: 8 }}><span style={{ color: "var(--success)", fontWeight: 800 }}>✓</span>{quotaLabel === "project request" ? k.replaceAll("project posts", "project requests") : k}</li>)}
             </ul>
             {onChoose && (
               <button onClick={() => onChoose(p.tier)} disabled={!!busy || isCurrent || lower}

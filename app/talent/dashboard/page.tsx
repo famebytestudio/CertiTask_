@@ -12,8 +12,9 @@ import { SubmissionsTab } from "@/components/talent/SubmissionsTab";
 import { CertificatesTab } from "@/components/talent/CertificatesTab";
 import { ProfileTab } from "@/components/talent/ProfileTab";
 import { TeamsTab } from "@/components/talent/TeamsTab";
+import { BillingTab } from "@/components/client/BillingTab";
 
-const TAB_IDS = ["overview", "projects", "teams", "applications", "submissions", "certificates", "verification", "profile"] as const;
+const TAB_IDS = ["overview", "projects", "teams", "applications", "submissions", "certificates", "billing", "verification", "profile"] as const;
 export type TalentTab = (typeof TAB_IDS)[number];
 
 function TalentDashboard() {
@@ -36,6 +37,7 @@ function TalentDashboard() {
     { id: "applications", label: "My Applications",  icon: "📋" },
     { id: "submissions",  label: "My Submissions",   icon: "📤", badge: needsSubmission, badgeColor: "#E53E3E" },
     { id: "certificates", label: "My Certificates",  icon: "🏅", badge: certificates.length + (data.certificateHolds?.length ?? 0), badgeColor: (data.certificateHolds?.length ?? 0) > 0 ? "#97640E" : "var(--success)" },
+    { id: "billing",      label: "Premium Plan",      icon: "💳" },
     { id: "verification", label: "Verification",     icon: "🪪", badge: profile.verificationStatus === "VERIFIED" ? 0 : 1, badgeColor: profile.verificationStatus === "PENDING_REVIEW" ? "#97640E" : "#E53E3E" },
     { id: "profile",      label: "Edit Profile",     icon: "✏️" },
   ];
@@ -72,6 +74,7 @@ function TalentDashboard() {
       {tab === "applications" && <ApplicationsTab applications={applications} onChanged={refresh} goTo={setTab} />}
       {tab === "submissions"  && <SubmissionsTab applications={applications} submissions={submissions} onChanged={refresh} />}
       {tab === "certificates" && <CertificatesTab certificates={certificates} holds={data.certificateHolds ?? []} talentId={profile.id} goTo={setTab} />}
+      {tab === "billing"      && <BillingTab onChanged={refresh} audience="talent" />}
       {tab === "verification" && <VerificationTab profile={profile} onChanged={refresh} />}
       {tab === "profile"      && <ProfileTab profile={profile} onSaved={refresh} />}
     </DashboardShell>

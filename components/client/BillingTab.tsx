@@ -21,7 +21,7 @@ export async function goToCheckout(tier: PlanTier): Promise<string | null> {
   return null;
 }
 
-export function BillingTab({ onChanged }: { onChanged: () => void }) {
+export function BillingTab({ onChanged, audience = "client" }: { onChanged: () => void; audience?: "client" | "talent" }) {
   const [data, setData] = useState<Data | null>(null);
   const [busy, setBusy] = useState<PlanTier | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +55,7 @@ export function BillingTab({ onChanged }: { onChanged: () => void }) {
 
   return (
     <div>
-      <SectionHeader icon="💳" title="Billing" subtitle={`Your first ${data.freePosts} published projects are free once verified. After that, pick a prepaid ${data.periodDays}-day plan. Prices in USD; Safepay settles PKR.`} />
+      <SectionHeader icon="💳" title="Billing" subtitle={audience === "talent" ? `Your first ${data.freePosts} project requests are free. After that, pick a prepaid ${data.periodDays}-day plan to keep applying. Prices in USD; Safepay settles PKR.` : `Your first ${data.freePosts} published projects are free once verified. After that, pick a prepaid ${data.periodDays}-day plan. Prices in USD; Safepay settles PKR.`} />
       {error && <Notice kind="error">{error}</Notice>}
       {info && <Notice kind="success">{info}</Notice>}
 
@@ -67,18 +67,18 @@ export function BillingTab({ onChanged }: { onChanged: () => void }) {
           {sub && <div style={{ fontSize: 12, color: "var(--ink-muted)" }}>{daysLeft} day{daysLeft !== 1 ? "s" : ""} left · ends {formatDate(sub.periodEnd)}{sub.cancelledAt ? " · reminders off" : ""}</div>}
         </div>
         <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--ink-subtle)", textTransform: "uppercase", letterSpacing: 1 }}>Free posts</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--ink-subtle)", textTransform: "uppercase", letterSpacing: 1 }}>{audience === "talent" ? "Free requests" : "Free posts"}</div>
           <div style={{ fontSize: 22, fontWeight: 800, color: "var(--navy)", marginTop: 4 }}>{e.verified ? `${e.freePostsLeft} of ${data.freePosts}` : "—"}</div>
-          <div style={{ fontSize: 12, color: "var(--ink-muted)" }}>{e.verified ? "remaining, lifetime" : "unlock by verifying your account"}</div>
+          <div style={{ fontSize: 12, color: "var(--ink-muted)" }}>{e.verified ? "remaining, lifetime" : audience === "talent" ? "confirm your email to unlock" : "unlock by verifying your account"}</div>
         </div>
         <div>
           <div style={{ fontSize: 11, fontWeight: 700, color: "var(--ink-subtle)", textTransform: "uppercase", letterSpacing: 1 }}>This period</div>
           <div style={{ fontSize: 22, fontWeight: 800, color: "var(--navy)", marginTop: 4 }}>{sub ? (sub.postLimit === null ? `${sub.postsUsed} / ∞` : `${sub.postsUsed} / ${sub.postLimit}`) : "—"}</div>
-          <div style={{ fontSize: 12, color: "var(--ink-muted)" }}>projects published</div>
+          <div style={{ fontSize: 12, color: "var(--ink-muted)" }}>{audience === "talent" ? "requests used" : "projects published"}</div>
         </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8, flexWrap: "wrap" }}>
           <span style={{ fontSize: 12, fontWeight: 700, padding: "4px 10px", borderRadius: 20, background: e.canPost ? "rgba(56,161,105,0.12)" : "rgba(229,62,62,0.12)", color: e.canPost ? "#276749" : "#9B2C2C" }}>
-            {e.canPost ? "You can publish" : e.reason === "NOT_VERIFIED" ? "Verify to publish" : e.reason === "LIMIT_REACHED" ? "Limit reached" : "Plan required"}
+            {e.canPost ? audience === "talent" ? "You can apply" : "You can publish" : e.reason === "NOT_VERIFIED" ? audience === "talent" ? "Confirm email" : "Verify to publish" : e.reason === "LIMIT_REACHED" ? "Limit reached" : "Plan required"}
           </span>
           {sub && !sub.cancelledAt && <Btn variant="ghost" small onClick={cancel}>Stop reminders</Btn>}
         </div>
@@ -87,7 +87,7 @@ export function BillingTab({ onChanged }: { onChanged: () => void }) {
       <h3 style={{ fontSize: 15, fontWeight: 700, color: "var(--navy)", margin: "0 0 14px" }}>{sub ? "Upgrade or renew" : "Choose a plan"}</h3>
       {!e.verified && <Notice kind="warning">Plans can be bought once your account is verified.</Notice>}
       <div style={{ marginTop: 16, marginBottom: 32 }}>
-        <PlanCards plans={data.plans} current={sub?.plan ?? null} onChoose={e.verified ? choose : undefined} busy={busy} compact />
+        <PlanCards plans={data.plans} current={sub?.plan ?? null} onChoose={e.verified ? choose : undefined} busy={busy} compact quotaLabel={audience === "talent" ? "project request" : undefined} />
       </div>
       {sub && <p style={{ fontSize: 12, color: "var(--ink-subtle)", marginTop: -20, marginBottom: 28 }}>Upgrading starts a new {data.periodDays}-day period today. To renew the same plan, choose it again in the last 7 days of the period or after it ends.</p>}
 
@@ -122,7 +122,7 @@ export function BillingTab({ onChanged }: { onChanged: () => void }) {
             {data.subscriptions.map(s => (
               <div key={s.id} style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "8px 0", borderBottom: "1px solid var(--border)", flexWrap: "wrap" }}>
                 <span><strong style={{ color: "var(--navy)" }}>{planName(s.plan)}</strong> · {formatDate(s.periodStart)} → {formatDate(s.periodEnd)}</span>
-                <span>{s.postsUsed}{s.postLimit ? ` / ${s.postLimit}` : ""} posts · {s.status.toLowerCase()}</span>
+                <span>{s.postsUsed}{s.postLimit ? ` / ${s.postLimit}` : ""} {audience === "talent" ? "requests" : "posts"} · {s.status.toLowerCase()}</span>
               </div>
             ))}
           </div>

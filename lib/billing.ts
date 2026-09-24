@@ -1,12 +1,13 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { paymentProvider } from "@/lib/payments/safepay";
-import { FREE_POSTS, PERIOD_DAYS, PLANS, PLAN_RANK, formatUsd, type PlanTier } from "@/lib/plans";
+import { FREE_POSTS, PERIOD_DAYS, PLANS, PLAN_RANK, formatUsd, planForAudience, type PlanTier } from "@/lib/plans";
 import { audit } from "@/lib/audit";
 import { notify } from "@/lib/notifications";
 import { sendReceiptEmail } from "@/lib/email";
 import { appUrl } from "@/lib/email-verification";
 import type { SessionPayload } from "@/lib/auth-token";
+import type { Role } from "@prisma/client";
 
 type Tx = Prisma.TransactionClient;
 
@@ -18,7 +19,7 @@ export const activeSubscriptionSelect = {
   id: true, plan: true, status: true, periodStart: true, periodEnd: true, postsUsed: true, postLimit: true, cancelledAt: true,
 } satisfies Prisma.SubscriptionSelect;
 
-/** The client's current ACTIVE period, if any (and not past its end). */
+/** The account's current ACTIVE period, if any (and not past its end). */
 export async function getActiveSubscription(clientId: string, db: Tx | typeof prisma = prisma) {
   return db.subscription.findFirst({
     where: { clientId, status: "ACTIVE", periodEnd: { gt: new Date() } },
@@ -40,10 +41,10 @@ export interface Entitlement {
 
 const NO_FEATURES = { applicantFilters: false, priorityVisibility: false, analytics: false, featured: false, prioritySupport: false };
 
-/** What a client is allowed to do right now. Single source of truth for gates and UI. */
-export async function getEntitlement(clientId: string, db: Tx | typeof prisma = prisma): Promise<Entitlement> {
-  const user = await db.user.findUniqueOrThrow({ where: { id: clientId }, select: { verificationStatus: true, freePostsUsed: true } });
-  const verified = user.verificationStatus === "VERIFIED";
+/** What an account is allowed to do right now. Single source of truth for gates and UI. */
+export async function getEntitlement(clientId: string, db: Tx | typeof prisma = prisma, role: Role = "CLIENT"): Promise<Entitlement> {
+  const user = await db.user.findUniqueOrThrow({ where: { id: clientId }, select: { verificationStatus: true, emailVerifiedAt: true, freePostsUsed: true } });
+  const verified = role === "TALENT" ? !!user.emailVerifiedAt : user.verificationStatus === "VERIFIED";
   const sub = await getActiveSubscription(clientId, db);
   const freePostsLeft = verified ? Math.max(0, FREE_POSTS - user.freePostsUsed) : 0;
   const postsLeftInPeriod = sub ? (sub.postLimit === null ? null : Math.max(0, sub.postLimit - sub.postsUsed)) : 0;
@@ -62,7 +63,7 @@ export async function getEntitlement(clientId: string, db: Tx | typeof prisma = 
  * first (lifetime), then the active period's quota.
  */
 export async function consumePost(tx: Tx, clientId: string, projectId: string): Promise<"FREE" | "SUBSCRIPTION"> {
-  const e = await getEntitlement(clientId, tx);
+  const e = await getEntitlement(clientId, tx, "CLIENT");
   if (e.reason === "NOT_VERIFIED") throw new BillingError("Complete verification before publishing a project", "NOT_VERIFIED", 403);
   if (e.reason === "PLAN_REQUIRED") throw new BillingError(`You've used your ${FREE_POSTS} free project posts. Choose a plan to keep posting.`, "PLAN_REQUIRED");
   if (e.reason === "LIMIT_REACHED") throw new BillingError(`Your ${PLANS[e.subscription!.plan].name} plan allows ${e.subscription!.postLimit} posts per ${PERIOD_DAYS} days and you've used them all. Upgrade to post more.`, "LIMIT_REACHED");
@@ -76,11 +77,25 @@ export async function consumePost(tx: Tx, clientId: string, projectId: string): 
   return "SUBSCRIPTION";
 }
 
-/** Rules for which plan a client may buy right now. */
-export async function assertPlanPurchasable(clientId: string, plan: PlanTier) {
-  const user = await prisma.user.findUniqueOrThrow({ where: { id: clientId }, select: { verificationStatus: true, emailVerifiedAt: true } });
+/** Count one talent project request against the talent's allowance. */
+export async function consumeApplication(tx: Tx, talentId: string): Promise<"FREE" | "SUBSCRIPTION"> {
+  const e = await getEntitlement(talentId, tx, "TALENT");
+  if (e.reason === "NOT_VERIFIED") throw new BillingError("Confirm your email address before applying", "NOT_VERIFIED", 403);
+  if (e.reason === "PLAN_REQUIRED") throw new BillingError(`You've used your ${FREE_POSTS} free project requests. Choose a plan to keep applying.`, "PLAN_REQUIRED");
+  if (e.reason === "LIMIT_REACHED") throw new BillingError(`Your ${PLANS[e.subscription!.plan].name} plan allows ${e.subscription!.postLimit} project requests per ${PERIOD_DAYS} days and you've used them all. Upgrade to apply more.`, "LIMIT_REACHED");
+  if (e.reason === "FREE") {
+    await tx.user.update({ where: { id: talentId }, data: { freePostsUsed: { increment: 1 } } });
+    return "FREE";
+  }
+  await tx.subscription.update({ where: { id: e.subscription!.id }, data: { postsUsed: { increment: 1 } } });
+  return "SUBSCRIPTION";
+}
+
+/** Rules for which plan an account may buy right now. */
+export async function assertPlanPurchasable(clientId: string, plan: PlanTier, role: Role) {
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: clientId }, select: { role: true, verificationStatus: true, emailVerifiedAt: true } });
   if (!user.emailVerifiedAt) throw new BillingError("Confirm your email address first", "INVALID", 403);
-  if (user.verificationStatus !== "VERIFIED") throw new BillingError("Complete verification before subscribing", "NOT_VERIFIED", 403);
+  if (role === "CLIENT" && user.verificationStatus !== "VERIFIED") throw new BillingError("Complete verification before subscribing", "NOT_VERIFIED", 403);
   const sub = await getActiveSubscription(clientId);
   if (sub && PLAN_RANK[plan] < PLAN_RANK[sub.plan]) {
     throw new BillingError(`You're on ${PLANS[sub.plan].name} until ${sub.periodEnd!.toDateString()}. A lower plan can be chosen when it ends.`, "INVALID", 409);
@@ -90,8 +105,8 @@ export async function assertPlanPurchasable(clientId: string, plan: PlanTier) {
 
 /** Create a PENDING subscription + payment and return the hosted checkout URL. */
 export async function startCheckout(actor: SessionPayload, plan: PlanTier) {
-  const current = await assertPlanPurchasable(actor.userId, plan);
-  const def = PLANS[plan];
+  const current = await assertPlanPurchasable(actor.userId, plan, actor.role === "TALENT" ? "TALENT" : "CLIENT");
+  const def = planForAudience(plan, actor.role === "TALENT" ? "TALENT" : "CLIENT");
 
   // Abandon any earlier unpaid attempt.
   await prisma.payment.updateMany({ where: { clientId: actor.userId, status: "PENDING" }, data: { status: "CANCELLED" } });
@@ -134,7 +149,7 @@ async function nextReceiptNumber(tx: Tx): Promise<string> {
  * a payment already SUCCEEDED returns immediately. Activates the subscription.
  */
 export async function confirmPayment(paymentId: string, source: "redirect" | "webhook"): Promise<{ status: string; subscriptionId: string | null }> {
-  const payment = await prisma.payment.findUnique({ where: { id: paymentId }, include: { subscription: true, client: { select: { id: true, name: true, email: true } } } });
+  const payment = await prisma.payment.findUnique({ where: { id: paymentId }, include: { subscription: true, client: { select: { id: true, name: true, email: true, role: true } } } });
   if (!payment) throw new BillingError("Payment not found", "INVALID", 404);
   if (payment.status === "SUCCEEDED") return { status: "SUCCEEDED", subscriptionId: payment.subscriptionId };
   if (!payment.providerRef) throw new BillingError("Payment was never sent to the provider", "INVALID", 409);
@@ -165,14 +180,17 @@ export async function confirmPayment(paymentId: string, source: "redirect" | "we
       await tx.subscription.updateMany({ where: { clientId: fresh.clientId, status: "ACTIVE", id: { not: subscriptionId } }, data: { status: "EXPIRED", periodEnd: start } });
       await tx.subscription.update({ where: { id: subscriptionId }, data: { status: "ACTIVE", periodStart: start, periodEnd: end, postsUsed: 0 } });
     }
-    await audit({ userId: fresh.clientId, role: "CLIENT" }, "billing.payment_succeeded", "payment", paymentId, { source, plan: fresh.plan, amountCents: fresh.amountCents, receipt }, tx);
+    await audit({ userId: fresh.clientId, role: payment.client.role }, "billing.payment_succeeded", "payment", paymentId, { source, plan: fresh.plan, amountCents: fresh.amountCents, receipt }, tx);
     return { status: "SUCCEEDED", subscriptionId, alreadyDone: false, receipt };
   }, { maxWait: 10_000, timeout: 30_000 });
 
   if (!result.alreadyDone && payment.plan) {
-    const def = PLANS[payment.plan];
-    await notify(payment.client.id, "billing.activated", `${def.name} plan active`, `Thanks for subscribing. You can post ${def.postLimit ?? "unlimited"} projects in the next ${PERIOD_DAYS} days. Receipt ${result.receipt}.`, "/client/dashboard?tab=billing");
-    void sendReceiptEmail(payment.client.email, payment.client.name, def.name, formatUsd(payment.amountCents), result.receipt!, `${appUrl()}/client/dashboard?tab=billing`).catch((e) => console.error("receipt email failed", e));
+    const def = planForAudience(payment.plan, payment.client.role === "TALENT" ? "TALENT" : "CLIENT");
+    const isTalent = payment.client.role === "TALENT";
+    const dashboardUrl = isTalent ? "/talent/dashboard?tab=billing" : "/client/dashboard?tab=billing";
+    const unit = isTalent ? "project requests" : "projects";
+    await notify(payment.client.id, "billing.activated", `${def.name} plan active`, `Thanks for subscribing. You can use ${def.postLimit ?? "unlimited"} ${unit} in the next ${PERIOD_DAYS} days. Receipt ${result.receipt}.`, dashboardUrl);
+    void sendReceiptEmail(payment.client.email, payment.client.name, def.name, formatUsd(payment.amountCents), result.receipt!, `${appUrl()}${dashboardUrl}`).catch((e) => console.error("receipt email failed", e));
   }
   return { status: "SUCCEEDED", subscriptionId: result.subscriptionId };
 }

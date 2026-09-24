@@ -134,8 +134,8 @@ model User {
   verificationStatus VerificationStatus @default(UNVERIFIED)
   verifiedAt         DateTime?
 
-  // Client billing (Phase 4)
-  freePostsUsed Int @default(0) // lifetime free published projects (2 for verified clients)
+  // Account billing (Phase 4): published projects for clients, project requests for talents.
+  freePostsUsed Int @default(0) // lifetime free quota (2 by default)
 
   // Common profile
   avatarUrl String?

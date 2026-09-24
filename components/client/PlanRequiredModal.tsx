@@ -6,8 +6,8 @@ import { PlanCards, type PlanCatalogItem } from "@/components/billing/PlanCards"
 import { goToCheckout } from "@/components/client/BillingTab";
 import type { PlanTier } from "@/lib/plans";
 
-/** Shown when publishing is blocked by billing (free posts used up / period limit reached). */
-export function PlanRequiredModal({ reason, onClose }: { reason: "PLAN_REQUIRED" | "LIMIT_REACHED"; onClose: () => void }) {
+/** Shown when publishing or applying is blocked by billing. */
+export function PlanRequiredModal({ reason, onClose, audience = "client" }: { reason: "PLAN_REQUIRED" | "LIMIT_REACHED"; onClose: () => void; audience?: "client" | "talent" }) {
   const [plans, setPlans] = useState<PlanCatalogItem[]>([]);
   const [current, setCurrent] = useState<PlanTier | null>(null);
   const [freePosts, setFreePosts] = useState(2);
@@ -28,12 +28,12 @@ export function PlanRequiredModal({ reason, onClose }: { reason: "PLAN_REQUIRED"
 
   return (
     <Modal
-      title={reason === "LIMIT_REACHED" ? "This period's posts are used up" : "Choose a plan to keep posting"}
-      subtitle={reason === "LIMIT_REACHED" ? "Upgrade to a bigger plan — a new 30-day period starts today." : `You've used your ${freePosts} free project posts. Your project is saved as a draft; pick a plan and it can go live right after payment.`}
+      title={reason === "LIMIT_REACHED" ? audience === "talent" ? "This period's requests are used up" : "This period's posts are used up" : audience === "talent" ? "Choose a plan to keep applying" : "Choose a plan to keep posting"}
+      subtitle={reason === "LIMIT_REACHED" ? "Upgrade to a bigger plan — a new 30-day period starts today." : audience === "talent" ? `You've used your ${freePosts} free project requests. Pick a plan to keep applying after payment.` : `You've used your ${freePosts} free project posts. Your project is saved as a draft; pick a plan and it can go live right after payment.`}
       onClose={onClose}
       maxWidth={860}
     >
-      {plans.length === 0 ? <p style={{ color: "var(--ink-muted)" }}>Loading plans…</p> : <PlanCards plans={plans} current={current} onChoose={choose} busy={busy} compact />}
+      {plans.length === 0 ? <p style={{ color: "var(--ink-muted)" }}>Loading plans…</p> : <PlanCards plans={plans} current={current} onChoose={choose} busy={busy} compact quotaLabel={audience === "talent" ? "project request" : undefined} />}
       {error && <Notice kind="error">{error}</Notice>}
       <p style={{ fontSize: 12, color: "var(--ink-subtle)", marginTop: 14 }}>Secure checkout by Safepay · prices in USD · no auto-renewal.</p>
     </Modal>
