@@ -6,17 +6,24 @@ export function isSameOrigin(request: Request): boolean {
 
   try {
     const sourceOrigin = new URL(source).origin;
-    const requestOrigin = new URL(request.url).origin;
+    const requestUrl = new URL(request.url);
     const configuredOrigin = process.env.APP_URL || process.env.VERCEL_URL ? appUrl() : null;
-    const forwardedHost = request.headers.get("x-forwarded-host")?.split(",", 1)[0]?.trim();
-    const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",", 1)[0]?.trim();
-    const forwardedOrigin = forwardedHost
-      ? `${forwardedProto || new URL(request.url).protocol.replace(":", "")}://${forwardedHost}`
-      : null;
+    const forwardedProto = request.headers
+      .get("x-forwarded-proto")
+      ?.split(",", 1)[0]
+      ?.trim();
+    const protocol = forwardedProto || requestUrl.protocol.slice(0, -1);
+    const hostOrigins = [
+      request.headers.get("x-forwarded-host"),
+      request.headers.get("host"),
+    ]
+      .map((host) => host?.split(",", 1)[0]?.trim())
+      .filter((host): host is string => Boolean(host))
+      .map((host) => new URL(`${protocol}://${host}`).origin);
 
-    return sourceOrigin === requestOrigin
+    return sourceOrigin === requestUrl.origin
       || sourceOrigin === configuredOrigin
-      || sourceOrigin === forwardedOrigin;
+      || hostOrigins.includes(sourceOrigin);
   } catch {
     return false;
   }
