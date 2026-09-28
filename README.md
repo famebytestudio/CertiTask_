@@ -47,7 +47,7 @@ Create a `.env` (or `.env.local`) file in the root directory of the project:
 
 ```env
 # Neon PostgreSQL Database Connection String
-DATABASE_URL="postgresql://user:password@host:port/database?sslmode=require"
+DATABASE_URL="postgresql://user:password@host:port/database?sslmode=verify-full"
 
 # JWT Secret Key for Session Encryption
 JWT_SECRET="replace-with-a-long-random-secret"

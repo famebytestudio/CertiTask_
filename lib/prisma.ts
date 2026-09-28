@@ -14,8 +14,14 @@ function getPrisma(): PrismaClient {
     throw new Error("DATABASE_URL is not configured");
   }
 
+  const databaseUrl = new URL(connectionString);
+  const sslMode = databaseUrl.searchParams.get("sslmode")?.toLowerCase();
+  if (sslMode === "prefer" || sslMode === "require" || sslMode === "verify-ca") {
+    databaseUrl.searchParams.set("sslmode", "verify-full");
+  }
+
   const pool = new Pool({
-    connectionString,
+    connectionString: databaseUrl.toString(),
     ssl: {
       rejectUnauthorized: true,
     },
