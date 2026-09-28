@@ -11,20 +11,30 @@ function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 
-/** Create a fresh single-use token (invalidating older ones) and email the link. */
+/** Create a fresh single-use token and email the link.
+ *  Old unused tokens are only removed AFTER the email is confirmed sent,
+ *  so a previous link stays valid if delivery fails. */
 export async function sendEmailVerification(user: { id: string; email: string; name: string }): Promise<void> {
   const raw = randomBytes(32).toString("hex");
-  await prisma.$transaction([
-    prisma.emailVerificationToken.deleteMany({ where: { userId: user.id, usedAt: null } }),
-    prisma.emailVerificationToken.create({
-      data: { userId: user.id, tokenHash: hashToken(raw), expiresAt: new Date(Date.now() + TTL_MS) },
-    }),
-  ]);
+
+  // Create the new token WITHOUT deleting old ones yet
+  await prisma.emailVerificationToken.create({
+    data: { userId: user.id, tokenHash: hashToken(raw), expiresAt: new Date(Date.now() + TTL_MS) },
+  });
+
   try {
     const url = `${appUrl()}/auth/verify-email?token=${raw}`;
     await sendVerifyEmailEmail(user.email, user.name, url);
+    // Only after successful delivery, clean up old unused tokens
+    await prisma.emailVerificationToken.deleteMany({
+      where: { userId: user.id, usedAt: null, tokenHash: { not: hashToken(raw) } },
+    });
   } catch (err) {
     console.error("verification email failed:", err);
+    // Clean up the token we just created since email didn't send
+    await prisma.emailVerificationToken.deleteMany({
+      where: { userId: user.id, tokenHash: hashToken(raw), usedAt: null },
+    }).catch(() => {});
   }
 }
 
