@@ -1,6 +1,10 @@
 import { appUrl } from "@/lib/app-url";
 
 export function isSameOrigin(request: Request): boolean {
+  if (request.headers.get("sec-fetch-site") === "same-origin") {
+    return true;
+  }
+
   const source = request.headers.get("origin") || request.headers.get("referer");
   if (!source) return false;
 
