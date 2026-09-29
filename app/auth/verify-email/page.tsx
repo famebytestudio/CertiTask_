@@ -2,14 +2,17 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const BOX_COUNT = 6;
 
 export default function VerifyEmailPage() {
+  const router = useRouter();
   const [digits, setDigits] = useState<string[]>(Array(BOX_COUNT).fill(""));
   const [state, setState] = useState<"idle" | "working" | "ok" | "error">("idle");
   const [message, setMessage] = useState("");
   const [resendState, setResendState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [destDashboard, setDestDashboard] = useState<string>("/client/dashboard");
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
 
   /* ── OTP input logic ── */
@@ -50,7 +53,18 @@ export default function VerifyEmailPage() {
       });
       const json = await res.json();
       if (res.ok) {
+        const dest = json.role === "admin"
+          ? "/admin/dashboard"
+          : json.role === "talent"
+          ? "/talent/dashboard"
+          : "/client/dashboard";
+        setDestDashboard(dest);
         setState("ok");
+        // Auto-redirect to the dedicated dashboard after 1.2s
+        setTimeout(() => {
+          router.push(dest);
+          router.refresh();
+        }, 1200);
       } else {
         setState("error");
         setMessage(json.error ?? "Incorrect code. Please try again.");
@@ -112,9 +126,9 @@ export default function VerifyEmailPage() {
           <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
           <h1 style={{ fontSize: 22, fontWeight: 800, color: "var(--navy)", margin: "0 0 8px" }}>Email verified!</h1>
           <p style={{ color: "var(--ink-muted)", fontSize: 14, margin: "0 0 24px" }}>
-            You&apos;re all set. Next step: complete your identity verification in your dashboard.
+            Redirecting you to your dashboard…
           </p>
-          <Link href="/dashboard" style={{ display: "inline-block", padding: "11px 28px", background: "var(--navy)", color: "#fff", borderRadius: 8, fontWeight: 700, textDecoration: "none", fontSize: 14 }}>
+          <Link href={destDashboard} style={{ display: "inline-block", padding: "11px 28px", background: "var(--navy)", color: "#fff", borderRadius: 8, fontWeight: 700, textDecoration: "none", fontSize: 14 }}>
             Go to dashboard
           </Link>
         </div>

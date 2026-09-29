@@ -15,7 +15,7 @@ export async function POST(req: Request) {
 
   // Rate-limit by userId — max 10 attempts per hour
   if (await isRateLimited(`verify-email-otp:${auth.userId}`, 10, 60 * 60 * 1000)) {
-    return NextResponse.json({ error: "Too many attempts. Wait a while and try again." }, { status: 429 });
+    return NextResponse.json({ error: "Too many attempts. Wait a while and try again.", retryAfterSeconds: 60 * 60 }, { status: 429 });
   }
 
   let otp: unknown;
@@ -34,17 +34,20 @@ export async function POST(req: Request) {
   }
 
   try {
-    const ok = await confirmEmailOtp(auth.userId, otp.trim());
-    if (!ok) {
+    const result = await confirmEmailOtp(auth.userId, otp.trim());
+    if (result !== "verified") {
       return NextResponse.json(
-        { error: "Incorrect code or it has expired. Request a new one below." },
+        {
+          error: result === "expired" ? "Your code has expired. Request a new one below." : "Incorrect code. Please try again.",
+          code: result === "expired" ? "OTP_EXPIRED" : "OTP_INVALID",
+        },
         { status: 400 }
       );
     }
 
     await audit("system", "user.email_verified", "user", auth.userId);
-    console.log(`[verify-email] SUCCESS userId=${auth.userId}`);
-    return NextResponse.json({ success: true });
+    console.log(`[verify-email] SUCCESS userId=${auth.userId} role=${auth.role}`);
+    return NextResponse.json({ success: true, role: auth.role.toLowerCase() });
   } catch (err) {
     console.error("[verify-email] EXCEPTION:", err instanceof Error ? err.message : String(err));
     return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
