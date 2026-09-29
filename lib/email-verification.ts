@@ -1,55 +1,98 @@
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, randomInt } from "node:crypto";
 import { prisma } from "@/lib/prisma";
-import { sendVerifyEmailEmail } from "@/lib/email";
+import { sendVerifyEmailOtp } from "@/lib/email";
 import { appUrl } from "@/lib/app-url";
 
 export { appUrl };
 
-const TTL_MS = 24 * 60 * 60 * 1000;
+/** OTP expires in 15 minutes */
+const OTP_TTL_MS = 15 * 60 * 1000;
 
-function hashToken(token: string): string {
-  return createHash("sha256").update(token).digest("hex");
+/** Generate a cryptographically random 6-digit OTP string (zero-padded). */
+function generateOtp(): string {
+  return String(randomInt(0, 1_000_000)).padStart(6, "0");
 }
 
-/** Create a fresh single-use token and email the link.
- *  Old unused tokens are only removed AFTER the email is confirmed sent,
- *  so a previous link stays valid if delivery fails. */
-export async function sendEmailVerification(user: { id: string; email: string; name: string }): Promise<void> {
-  const raw = randomBytes(32).toString("hex");
+/**
+ * Hash is keyed on both userId and otp so two users with the same 6 digits
+ * produce different hashes, and the UNIQUE constraint on tokenHash is safe.
+ */
+function hashOtp(userId: string, otp: string): string {
+  return createHash("sha256").update(`${userId}:${otp}`).digest("hex");
+}
 
-  // Create the new token WITHOUT deleting old ones yet
+/** Send a fresh 6-digit OTP to the user's email address. */
+export async function sendEmailVerification(user: { id: string; email: string; name: string }): Promise<void> {
+  const otp = generateOtp();
+  const tokenHash = hashOtp(user.id, otp);
+
+  // Create the new OTP token first
   await prisma.emailVerificationToken.create({
-    data: { userId: user.id, tokenHash: hashToken(raw), expiresAt: new Date(Date.now() + TTL_MS) },
+    data: {
+      userId: user.id,
+      tokenHash,
+      expiresAt: new Date(Date.now() + OTP_TTL_MS),
+    },
   });
 
   try {
-    const url = `${appUrl()}/auth/verify-email?token=${raw}`;
-    await sendVerifyEmailEmail(user.email, user.name, url);
-    // Only after successful delivery, clean up old unused tokens
+    await sendVerifyEmailOtp(user.email, user.name, otp);
+    // Only clean up old unused tokens after successful delivery
     await prisma.emailVerificationToken.deleteMany({
-      where: { userId: user.id, usedAt: null, tokenHash: { not: hashToken(raw) } },
+      where: { userId: user.id, usedAt: null, tokenHash: { not: tokenHash } },
     });
   } catch (err) {
-    console.error("verification email failed:", err);
-    // Clean up the token we just created since email didn't send
-    await prisma.emailVerificationToken.deleteMany({
-      where: { userId: user.id, tokenHash: hashToken(raw), usedAt: null },
-    }).catch(() => {});
+    console.error("[email-verification] OTP email failed:", err);
+    // Roll back the token we just created so user can request a fresh one
+    await prisma.emailVerificationToken
+      .deleteMany({ where: { userId: user.id, tokenHash, usedAt: null } })
+      .catch(() => {});
   }
 }
 
-/** Consume a token. Returns the user id on success, null if invalid/expired/used. */
-export async function confirmEmailToken(raw: string): Promise<string | null> {
-  const tokenHash = hashToken(raw);
+/**
+ * Validate a submitted OTP for a given user.
+ * Returns true on success (and marks the token used + user verified).
+ * Returns false if the OTP is wrong, expired, or already used.
+ */
+export async function confirmEmailOtp(userId: string, otp: string): Promise<boolean> {
+  const tokenHash = hashOtp(userId, otp.trim());
+  const now = new Date();
+
+  console.log(`[verify-otp] userId=${userId} hash_prefix=${tokenHash.slice(0, 8)}... now=${now.toISOString()}`);
+
   return prisma.$transaction(async (tx) => {
     const t = await tx.emailVerificationToken.findFirst({
-      where: { tokenHash, usedAt: null, expiresAt: { gt: new Date() } },
-      select: { id: true, userId: true },
+      where: { userId, tokenHash, usedAt: null, expiresAt: { gt: now } },
+      select: { id: true, expiresAt: true },
     });
-    if (!t) return null;
-    const claimed = await tx.emailVerificationToken.updateMany({ where: { id: t.id, usedAt: null }, data: { usedAt: new Date() } });
-    if (claimed.count !== 1) return null;
-    await tx.user.update({ where: { id: t.userId }, data: { emailVerifiedAt: new Date() } });
-    return t.userId;
+
+    if (!t) {
+      // Diagnostic: check if the token exists but is expired/used
+      const any = await tx.emailVerificationToken.findFirst({
+        where: { tokenHash },
+        select: { usedAt: true, expiresAt: true },
+      });
+      if (any) {
+        console.log(`[verify-otp] Token found but invalid: usedAt=${any.usedAt?.toISOString() ?? "null"} expiresAt=${any.expiresAt.toISOString()} expired=${any.expiresAt <= now}`);
+      } else {
+        console.log(`[verify-otp] Token NOT found in DB (wrong OTP or userId)`);
+      }
+      return false;
+    }
+
+    console.log(`[verify-otp] Token matched, expiresAt=${t.expiresAt.toISOString()}`);
+
+    const claimed = await tx.emailVerificationToken.updateMany({
+      where: { id: t.id, usedAt: null },
+      data: { usedAt: new Date() },
+    });
+    if (claimed.count !== 1) {
+      console.log(`[verify-otp] Race condition: token already claimed`);
+      return false;
+    }
+
+    await tx.user.update({ where: { id: userId }, data: { emailVerifiedAt: new Date() } });
+    return true;
   }, { maxWait: 10_000, timeout: 30_000 });
 }

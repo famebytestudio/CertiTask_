@@ -70,6 +70,7 @@ export function sendPasswordResetEmail(to: string, resetUrl: string) {
   });
 }
 
+/** @deprecated replaced by sendVerifyEmailOtp */
 export function sendVerifyEmailEmail(to: string, name: string, verifyUrl: string) {
   return sendEmail({
     to,
@@ -78,6 +79,27 @@ export function sendVerifyEmailEmail(to: string, name: string, verifyUrl: string
     html: layout("Confirm your email", `<p>Hi ${name},</p><p>Confirm your email address to start applying to projects, or posting them. The link expires in 24 hours.</p>${button(verifyUrl, "Confirm email")}`),
   });
 }
+
+/** Send a 6-digit OTP verification code to the user's email. */
+export function sendVerifyEmailOtp(to: string, name: string, otp: string) {
+  return sendEmail({
+    to,
+    subject: `${otp} is your CertiTask verification code`,
+    text: `Hi ${name},\n\nYour CertiTask email verification code is:\n\n${otp}\n\nEnter this code on the verification page. It expires in 15 minutes and can only be used once.\n\nIf you didn't create a CertiTask account, you can ignore this email.`,
+    html: layout(
+      "Verify your email",
+      `<p>Hi ${name},</p>
+       <p>Enter the code below on the verification page to confirm your email address.</p>
+       <div style="margin:28px auto;text-align:center">
+         <div style="display:inline-block;background:#F4F6FA;border:2px solid #0F2A4A;border-radius:12px;padding:18px 36px">
+           <span style="font-size:40px;font-weight:900;letter-spacing:12px;color:#0F2A4A;font-family:monospace">${otp}</span>
+         </div>
+       </div>
+       <p style="font-size:13px;color:#7B8794;text-align:center">This code expires in <strong>15 minutes</strong> and works once only.</p>`
+    ),
+  });
+}
+
 
 export function sendVerificationDecisionEmail(to: string, name: string, approved: boolean, reason: string | null, dashboardUrl: string) {
   const subject = approved ? "Your CertiTask verification was approved" : "Your CertiTask verification needs another look";
