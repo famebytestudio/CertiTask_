@@ -15,7 +15,8 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
     pathname?.startsWith("/client/") ||
     pathname?.startsWith("/admin/dashboard") ||
     pathname?.startsWith("/api") ||
-    pathname?.startsWith("/certificates/");
+    pathname?.startsWith("/certificates/") ||
+    pathname?.startsWith("/payment/"); // checkout flow renders full-screen
 
   if (isAuthOrDashboard) {
     return <main className="min-h-screen flex flex-col">{children}</main>;

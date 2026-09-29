@@ -9,7 +9,7 @@ import { BillingError, confirmPayment } from "@/lib/billing";
  * is paid; the redirect itself proves nothing.
  */
 export async function POST(req: Request) {
-  const auth = await requireRole("CLIENT");
+  const auth = await requireRole("CLIENT", "TALENT");
   if (auth instanceof NextResponse) return auth;
   try {
     const { paymentId } = await req.json();

@@ -32,9 +32,7 @@ function getPrisma(): PrismaClient {
   const adapter = new PrismaPg(pool);
   const client = new PrismaClient({ adapter });
 
-  // Cache in all environments so serverless warm invocations reuse the pool.
-  // (Next.js hot-reload in dev already handles this via module re-evaluation.)
-  globalForPrisma.prisma = client;
+  if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = client;
   return client;
 }
 

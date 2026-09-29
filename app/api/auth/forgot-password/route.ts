@@ -6,9 +6,6 @@ import { appUrl } from "@/lib/app-url";
 import { isRateLimited } from "@/lib/rate-limit";
 import { isEmail } from "@/lib/validation";
 
-// Force dynamic — never let Vercel cache this route
-export const dynamic = "force-dynamic";
-
 const GENERIC_RESPONSE = { success: true };
 
 function hashToken(token: string): string {

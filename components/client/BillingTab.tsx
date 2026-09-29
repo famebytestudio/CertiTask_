@@ -13,11 +13,9 @@ interface Data { entitlement: Entitlement; subscriptions: Sub[]; payments: Pay[]
 
 const usd = (c: number) => `$${(c / 100).toFixed(c % 100 === 0 ? 0 : 2)}`;
 
-/** Start a hosted checkout for a plan and send the browser to Safepay. Shared with the plan-required modal. */
+/** Open the new in-app checkout flow before redirecting to Safepay. */
 export async function goToCheckout(tier: PlanTier): Promise<string | null> {
-  const r = await api<{ checkoutUrl: string }>("/api/billing/checkout", "POST", { plan: tier });
-  if (!r.ok || !r.data?.checkoutUrl) return r.error ?? "Could not start checkout";
-  window.location.assign(r.data.checkoutUrl);
+  window.location.assign(`/checkout?plan=${tier}`);
   return null;
 }
 
