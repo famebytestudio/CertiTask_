@@ -122,7 +122,8 @@ export default function SignupPage() {
         return;
       }
 
-      router.push(role === "client" ? "/client/dashboard" : "/talent/dashboard");
+      // Send user to OTP verification screen right after signup
+      router.push("/auth/verify-email");
       router.refresh();
     } catch {
       setErrors({ general: "An error occurred during account creation. Please try again." });
