@@ -26,7 +26,9 @@ export async function sendEmailVerification(user: { id: string; email: string; n
   const otp = generateOtp();
   const tokenHash = hashOtp(user.id, otp);
 
-  // Create the new OTP token first
+  console.log(`[send-otp] Creating OTP for userId=${user.id} email=${user.email} hash_prefix=${tokenHash.slice(0, 8)}`);
+
+  // Create the new OTP token in DB
   await prisma.emailVerificationToken.create({
     data: {
       userId: user.id,
@@ -37,16 +39,14 @@ export async function sendEmailVerification(user: { id: string; email: string; n
 
   try {
     await sendVerifyEmailOtp(user.email, user.name, otp);
-    // Only clean up old unused tokens after successful delivery
-    await prisma.emailVerificationToken.deleteMany({
-      where: { userId: user.id, usedAt: null, tokenHash: { not: tokenHash } },
-    });
+    console.log(`[send-otp] OTP email sent successfully to ${user.email}`);
   } catch (err) {
-    console.error("[email-verification] OTP email failed:", err);
+    console.error("[send-otp] OTP email delivery failed:", err);
     // Roll back the token we just created so user can request a fresh one
     await prisma.emailVerificationToken
       .deleteMany({ where: { userId: user.id, tokenHash, usedAt: null } })
       .catch(() => {});
+    throw err;
   }
 }
 
@@ -55,11 +55,12 @@ export async function sendEmailVerification(user: { id: string; email: string; n
  * Returns true on success (and marks the token used + user verified).
  * Returns false if the OTP is wrong, expired, or already used.
  */
-export async function confirmEmailOtp(userId: string, otp: string): Promise<boolean> {
-  const tokenHash = hashOtp(userId, otp.trim());
+export async function confirmEmailOtp(userId: string, rawOtp: string): Promise<boolean> {
+  const cleanOtp = rawOtp.replace(/\D/g, "");
+  const tokenHash = hashOtp(userId, cleanOtp);
   const now = new Date();
 
-  console.log(`[verify-otp] userId=${userId} hash_prefix=${tokenHash.slice(0, 8)}... now=${now.toISOString()}`);
+  console.log(`[verify-otp] userId=${userId} cleanOtp=${cleanOtp} hash_prefix=${tokenHash.slice(0, 8)}... now=${now.toISOString()}`);
 
   return prisma.$transaction(async (tx) => {
     const t = await tx.emailVerificationToken.findFirst({
@@ -68,20 +69,20 @@ export async function confirmEmailOtp(userId: string, otp: string): Promise<bool
     });
 
     if (!t) {
-      // Diagnostic: check if the token exists but is expired/used
+      // Diagnostic: check if token exists by hash
       const any = await tx.emailVerificationToken.findFirst({
         where: { tokenHash },
-        select: { usedAt: true, expiresAt: true },
+        select: { userId: true, usedAt: true, expiresAt: true },
       });
       if (any) {
-        console.log(`[verify-otp] Token found but invalid: usedAt=${any.usedAt?.toISOString() ?? "null"} expiresAt=${any.expiresAt.toISOString()} expired=${any.expiresAt <= now}`);
+        console.log(`[verify-otp] Token found but invalid: userIdMatch=${any.userId === userId} usedAt=${any.usedAt?.toISOString() ?? "null"} expiresAt=${any.expiresAt.toISOString()} expired=${any.expiresAt <= now}`);
       } else {
-        console.log(`[verify-otp] Token NOT found in DB (wrong OTP or userId)`);
+        console.log(`[verify-otp] Token NOT found in DB for hash_prefix=${tokenHash.slice(0, 8)}`);
       }
       return false;
     }
 
-    console.log(`[verify-otp] Token matched, expiresAt=${t.expiresAt.toISOString()}`);
+    console.log(`[verify-otp] Token matched, id=${t.id} expiresAt=${t.expiresAt.toISOString()}`);
 
     const claimed = await tx.emailVerificationToken.updateMany({
       where: { id: t.id, usedAt: null },
@@ -93,6 +94,8 @@ export async function confirmEmailOtp(userId: string, otp: string): Promise<bool
     }
 
     await tx.user.update({ where: { id: userId }, data: { emailVerifiedAt: new Date() } });
+    // Clean up all remaining unused tokens for this user
+    await tx.emailVerificationToken.deleteMany({ where: { userId, usedAt: null } });
     return true;
   }, { maxWait: 10_000, timeout: 30_000 });
 }

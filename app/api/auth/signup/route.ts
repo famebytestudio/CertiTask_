@@ -58,7 +58,7 @@ export async function POST(req: Request) {
     });
 
     await audit({ userId: user.id, role: user.role }, "user.signup", "user", user.id, { role: user.role, clientType: dbClientType });
-    void sendEmailVerification(user); // never blocks signup
+    await sendEmailVerification(user).catch((e) => console.error("signup email verification failed:", e));
     if (user.role === "TALENT") void attachPendingInvites(user).catch((e) => console.error("attach invites failed", e));
 
     const token = await createToken({
