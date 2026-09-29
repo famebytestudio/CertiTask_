@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
 
 export interface TabDef<T extends string> {

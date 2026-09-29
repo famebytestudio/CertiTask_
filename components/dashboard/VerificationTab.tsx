@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Btn, Field, Notice, SectionHeader, VerificationBadge, inputStyle, selectStyle, formatDate } from "@/components/dashboard/ui";
 import { api } from "@/components/dashboard/useDashboardData";
 import { ID_TYPES, ID_TYPE_LABEL, type IdType } from "@/lib/verification";
@@ -67,6 +68,7 @@ function DocumentUpload({ slot, label, hint, doc, onChange, disabled }: { slot: 
 }
 
 export function VerificationTab({ profile, onChanged }: { profile: ProfileDto; onChanged: () => void }) {
+  const router = useRouter();
   const isOrg = profile.role === "CLIENT" && profile.clientType === "ORGANIZATION";
   const [state, setState] = useState<State | null>(null);
   const [loading, setLoading] = useState(true);
@@ -95,7 +97,11 @@ export function VerificationTab({ profile, onChanged }: { profile: ProfileDto; o
 
   async function resend() {
     const r = await api<{ alreadyVerified?: boolean }>("/api/auth/resend-verification", "POST");
-    setResent(r.ok ? "Sent. Check your inbox (and spam folder)." : r.error ?? "Could not send");
+    if (r.ok) {
+      router.push("/auth/verify-email");
+    } else {
+      setResent(r.error ?? "Could not send");
+    }
   }
 
   async function submit(e: React.FormEvent) {
@@ -128,10 +134,15 @@ export function VerificationTab({ profile, onChanged }: { profile: ProfileDto; o
       <div style={{ border: "1px solid var(--border)", borderRadius: 12, padding: 18, marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <div>
           <div style={{ fontSize: 14, fontWeight: 700, color: "var(--navy)" }}>1. Email address {emailOk ? <span style={{ color: "var(--success)" }}>✓ confirmed</span> : <span style={{ color: "#9B2C2C" }}>— not confirmed</span>}</div>
-          <div style={{ fontSize: 12, color: "var(--ink-muted)", marginTop: 2 }}>{emailOk ? profile.email : `We sent a link to ${profile.email}. Confirm it to continue.`}</div>
+          <div style={{ fontSize: 12, color: "var(--ink-muted)", marginTop: 2 }}>{emailOk ? profile.email : `We sent a 6-digit code to ${profile.email}. Enter it to continue.`}</div>
           {resent && <div style={{ fontSize: 12, color: "var(--navy)", marginTop: 4 }}>{resent}</div>}
         </div>
-        {!emailOk && <Btn variant="ghost" small onClick={resend}>Resend link</Btn>}
+        {!emailOk && (
+          <div style={{ display: "flex", gap: 8 }}>
+            <Btn variant="ghost" small onClick={resend}>Resend code</Btn>
+            <Btn variant="primary" small onClick={() => router.push("/auth/verify-email")}>Enter code</Btn>
+          </div>
+        )}
       </div>
 
       {/* Step 2: status */}
