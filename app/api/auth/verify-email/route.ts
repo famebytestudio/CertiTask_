@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { confirmEmailOtp } from "@/lib/email-verification";
+import { prisma } from "@/lib/prisma";
 import { isRateLimited } from "@/lib/rate-limit";
 import { requireRole } from "@/lib/auth";
 import { audit } from "@/lib/audit";
@@ -15,7 +16,7 @@ export async function POST(req: Request) {
 
   // Rate-limit by userId — max 10 attempts per hour
   if (await isRateLimited(`verify-email-otp:${auth.userId}`, 10, 60 * 60 * 1000)) {
-    return NextResponse.json({ error: "Too many attempts. Wait a while and try again.", retryAfterSeconds: 60 * 60 }, { status: 429 });
+    return NextResponse.json({ error: "Too many attempts. Wait a while and try again." }, { status: 429 });
   }
 
   let otp: unknown;
@@ -34,13 +35,16 @@ export async function POST(req: Request) {
   }
 
   try {
-    const result = await confirmEmailOtp(auth.userId, otp.trim());
-    if (result !== "verified") {
+    const ok = await confirmEmailOtp(auth.userId, otp.trim());
+    if (!ok) {
+      const activeToken = await prisma.emailVerificationToken.findFirst({
+        where: { userId: auth.userId, usedAt: null, expiresAt: { gt: new Date() } },
+        select: { id: true },
+      });
       return NextResponse.json(
-        {
-          error: result === "expired" ? "Your code has expired. Request a new one below." : "Incorrect code. Please try again.",
-          code: result === "expired" ? "OTP_EXPIRED" : "OTP_INVALID",
-        },
+        activeToken
+          ? { error: "Incorrect code. Check the digits and try again." }
+          : { error: "This code has expired. Request a new one to continue.", expired: true },
         { status: 400 }
       );
     }

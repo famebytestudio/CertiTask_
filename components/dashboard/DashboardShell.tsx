@@ -179,22 +179,27 @@ export function Banner({ eyebrow, title, subtitle, actions }: { eyebrow: string;
 
 /** Shown above the main panel until the user confirms their email. */
 export function EmailBanner({ email, verified, onVerify }: { email: string; verified: boolean; onVerify: () => void }) {
+  const router = useRouter();
   const [msg, setMsg] = useState<string | null>(null);
   if (verified) return null;
   async function resend() {
     const res = await fetch("/api/auth/resend-verification", { method: "POST" });
     const json = await res.json().catch(() => ({}));
-    setMsg(res.ok ? "Sent. Check your inbox and spam folder." : json.error ?? "Could not send");
+    if (res.ok) {
+      router.push("/auth/verify-email");
+    } else {
+      setMsg(json.error ?? "Could not send");
+    }
   }
   return (
     <div role="status" style={{ background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 12, padding: "12px 16px", marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
       <div style={{ fontSize: 13, color: "#744210" }}>
-        <strong>Confirm your email.</strong> We sent a link to <strong>{email}</strong>. Until then you can browse and edit your profile, but not apply or post.
+        <strong>Confirm your email.</strong> We sent a 6-digit code to <strong>{email}</strong>. Until then you can browse and edit your profile, but not apply or post.
         {msg && <span style={{ display: "block", marginTop: 4 }}>{msg}</span>}
       </div>
       <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={resend} style={{ padding: "6px 12px", background: "#fff", border: "1px solid #FDE68A", borderRadius: 8, fontSize: 12, fontWeight: 700, color: "#744210", cursor: "pointer" }}>Resend link</button>
-        <button onClick={onVerify} style={{ padding: "6px 12px", background: "#744210", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, color: "#fff", cursor: "pointer" }}>Verification steps</button>
+        <button onClick={resend} style={{ padding: "6px 12px", background: "#fff", border: "1px solid #FDE68A", borderRadius: 8, fontSize: 12, fontWeight: 700, color: "#744210", cursor: "pointer" }}>Resend code</button>
+        <button onClick={() => router.push("/auth/verify-email")} style={{ padding: "6px 12px", background: "#744210", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, color: "#fff", cursor: "pointer" }}>Enter code</button>
       </div>
     </div>
   );

@@ -3,7 +3,7 @@
  * Swap `paymentService` export for a different gateway without touching screens.
  */
 
-import type { Order, PaymentResult } from "./models";
+import type { Order } from "./models";
 
 export interface PaymentResult {
   ok: boolean;

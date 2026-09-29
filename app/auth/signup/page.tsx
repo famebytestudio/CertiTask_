@@ -122,9 +122,7 @@ export default function SignupPage() {
         return;
       }
 
-      // Send user to OTP verification screen right after signup
-      router.push("/auth/verify-email");
-      router.refresh();
+      router.push(`/auth/verify-email?email=${encodeURIComponent(email.trim())}`);
     } catch {
       setErrors({ general: "An error occurred during account creation. Please try again." });
       setLoading(false);
