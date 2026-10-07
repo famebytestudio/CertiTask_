@@ -28,6 +28,9 @@ export async function sendEmailVerification(user: { id: string; email: string; n
 
   console.log(`[send-otp] Creating OTP for userId=${user.id} email=${user.email} hash_prefix=${tokenHash.slice(0, 8)}`);
 
+  // Invalidate any previous unused tokens for this user so only one OTP is valid at a time
+  await prisma.emailVerificationToken.deleteMany({ where: { userId: user.id, usedAt: null } }).catch(() => {});
+
   // Create the new OTP token in DB
   await prisma.emailVerificationToken.create({
     data: {

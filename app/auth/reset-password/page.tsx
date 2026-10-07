@@ -153,15 +153,14 @@ export default function ResetPasswordPage() {
                   <input
                     id="reset-code"
                     type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
                     maxLength={128}
                     className={`form-input${error ? " has-error" : ""}`}
-                    placeholder="Paste reset token"
+                    placeholder="Paste reset token from your email"
                     value={code}
-                    onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-                    style={{ letterSpacing: "0.3em", fontWeight: 600 }}
-                    autoComplete="one-time-code"
+                    onChange={(e) => setCode(e.target.value.trim())}
+                    style={{ letterSpacing: "0.05em", fontWeight: 600 }}
+                    autoComplete="off"
+                    spellCheck={false}
                   />
                 </div>
                 {error && <span className="field-error">{error}</span>}
@@ -171,7 +170,7 @@ export default function ResetPasswordPage() {
                 type="submit"
                 id="verify-code-submit"
                 className={`btn-primary mt-4${loading ? " loading" : ""}`}
-                disabled={loading || code.length < 32}
+                disabled={loading || code.length < 20}
               >
                 {loading ? <><span className="spinner" />Continuing…</> : "Continue"}
               </button>
