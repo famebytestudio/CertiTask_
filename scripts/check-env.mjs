@@ -44,12 +44,17 @@ export function environmentErrors(env, production = false) {
   return errors;
 }
 
-export function checkEnvironment(production = false) {
+export function checkEnvironment(production = false, failOnError = true) {
   loadEnvConfig(process.cwd());
   const errors = environmentErrors(process.env, production);
   if (errors.length) {
-    console.error(`Environment check failed:\n${errors.map(error => `- ${error}`).join("\n")}`);
-    return false;
+    if (failOnError) {
+      console.error(`Environment check failed:\n${errors.map(error => `- ${error}`).join("\n")}`);
+      return false;
+    } else {
+      console.warn(`Environment notice (non-blocking):\n${errors.map(error => `! ${error}`).join("\n")}`);
+      return true;
+    }
   }
   console.log(`Environment check passed (${production ? "production" : "development/preview"}).`);
   return true;
