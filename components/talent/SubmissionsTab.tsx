@@ -1,10 +1,11 @@
 "use client";
 
+import { WorkspaceIcon } from "@/components/dashboard/WorkspaceIcon";
+
 import { useState } from "react";
 import Link from "next/link";
 import {
   Btn,
-  Card,
   EmptyState,
   Field,
   Modal,
@@ -60,7 +61,7 @@ export function SubmissionsTab({
   return (
     <div>
       <SectionHeader
-        icon="📤"
+        icon={<WorkspaceIcon name="submissions" />}
         title="My Submissions"
         subtitle="Submit project deliverables for client review, track reviewer feedback, and earn your verified credentials."
         action={
@@ -74,7 +75,7 @@ export function SubmissionsTab({
       {todo.length > 0 && (
         <div style={{ marginBottom: 28 }}>
           <div style={{ fontSize: 13, fontWeight: 800, color: "#276749", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 12 }}>
-            ⚡ Action Required: Ready for Submission ({todo.length})
+            <WorkspaceIcon name="bolt" /> Action Required: Ready for Submission ({todo.length})
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -106,7 +107,7 @@ export function SubmissionsTab({
                 </div>
 
                 <Btn variant="success" onClick={() => open(a.projectId, a.project.title)}>
-                  📤 Submit Deliverables Now →
+                  <WorkspaceIcon name="submissions" /> Submit Deliverables Now →
                 </Btn>
               </div>
             ))}
@@ -117,7 +118,7 @@ export function SubmissionsTab({
       {/* Main Submissions List */}
       {submissions.length === 0 && todo.length === 0 ? (
         <EmptyState
-          icon="📂"
+          icon={<WorkspaceIcon name="folder" />}
           title="No submissions yet"
           hint="When a client selects your application, you will be able to submit your work here and track client reviews."
         />
@@ -180,7 +181,7 @@ export function SubmissionsTab({
                         flexWrap: "wrap",
                       }}
                     >
-                      <span style={{ fontSize: 14 }}>🔗</span>
+                      <span style={{ fontSize: 14 }}><WorkspaceIcon name="link" /></span>
                       <a
                         href={sub.submissionUrl}
                         target="_blank"
@@ -229,7 +230,7 @@ export function SubmissionsTab({
                             marginBottom: 4,
                           }}
                         >
-                          💬 Client Feedback & Review
+                          <WorkspaceIcon name="message" /> Client Feedback & Review
                         </div>
                         <p style={{ margin: 0, fontSize: 13, color: "var(--ink)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
                           {sub.feedback}
@@ -244,7 +245,7 @@ export function SubmissionsTab({
                           Changes requested. Update your deliverable and resubmit.
                         </span>
                         <Btn variant="primary" small onClick={() => open(sub.projectId, sub.project.title, sub)}>
-                          ✏️ Resubmit Deliverables
+                          <WorkspaceIcon name="edit" /> Resubmit Deliverables
                         </Btn>
                       </div>
                     )}
@@ -261,7 +262,7 @@ export function SubmissionsTab({
                           gap: 10,
                         }}
                       >
-                        <span style={{ fontSize: 20 }}>🏅</span>
+                        <span style={{ fontSize: 20 }}><WorkspaceIcon name="certificates" /></span>
                         <div style={{ fontSize: 13, color: "#276749", fontWeight: 700 }}>
                           Deliverables approved! Your verified certificate has been issued. Check the &ldquo;My Certificates&rdquo; tab to view and share it.
                         </div>

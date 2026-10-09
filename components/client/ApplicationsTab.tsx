@@ -1,5 +1,7 @@
 "use client";
 
+import { WorkspaceIcon } from "@/components/dashboard/WorkspaceIcon";
+
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
@@ -76,7 +78,7 @@ export function ApplicationsTab({
   return (
     <div>
       <SectionHeader
-        icon="📋"
+        icon={<WorkspaceIcon name="applications" />}
         title="Candidate Applications"
         subtitle="Review pitches from talent and teams, evaluate verified member profiles, and select the winning team to build your project."
         action={
@@ -111,7 +113,7 @@ export function ApplicationsTab({
               { id: "all", label: "All Applications", count: counts.all },
               { id: "PENDING", label: "Pending Review", count: counts.PENDING },
               { id: "SHORTLISTED", label: "Shortlisted", count: counts.SHORTLISTED },
-              { id: "SELECTED", label: "Selected 🎉", count: counts.SELECTED },
+              { id: "SELECTED", label: "Selected", count: counts.SELECTED },
               { id: "REJECTED", label: "Rejected", count: counts.REJECTED },
             ] as const
           ).map(tab => (
@@ -168,7 +170,7 @@ export function ApplicationsTab({
           }}
         >
           <span style={{ fontSize: 11, fontWeight: 800, color: "var(--ink-subtle)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-            ⚡ Advanced Filters:
+            <WorkspaceIcon name="bolt" /> Advanced Filters:
           </span>
 
           <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontWeight: 600, color: "var(--navy)" }}>
@@ -220,7 +222,7 @@ export function ApplicationsTab({
             flexWrap: "wrap",
           }}
         >
-          <span>✨ <strong>Growth &amp; Pro Feature:</strong> Filter applicants by verified ID status, team size threshold, and pitch technology keywords.</span>
+          <span><WorkspaceIcon name="sparkles" /> <strong>Growth &amp; Pro Feature:</strong> Filter applicants by verified ID status, team size threshold, and pitch technology keywords.</span>
           {goTo && (
             <button
               onClick={() => goTo("billing")}
@@ -235,7 +237,7 @@ export function ApplicationsTab({
       {/* Applications List */}
       {visible.length === 0 ? (
         <EmptyState
-          icon="📬"
+          icon={<WorkspaceIcon name="mail" />}
           title="No candidate applications found"
           hint={applications.length === 0 ? "Applications will appear here as soon as talent pitches for your active projects." : "Try adjusting your active project filter or search criteria."}
         />
@@ -364,7 +366,7 @@ export function ApplicationsTab({
                         style={{ background: "#3182CE", padding: "8px 16px", fontWeight: 700 }}
                         onClick={() => decide(app.id, "SHORTLISTED")}
                       >
-                        ⭐ Shortlist
+                        <WorkspaceIcon name="star" /> Shortlist
                       </Btn>
                     )}
 

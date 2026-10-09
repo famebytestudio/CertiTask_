@@ -1,10 +1,12 @@
+
+import { WorkspaceIcon } from "@/components/dashboard/WorkspaceIcon";
 import Link from "next/link";
 
 export default function PaymentCancelPage() {
   return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--paper)", padding: 20 }}>
       <div style={{ background: "#fff", border: "1px solid var(--border)", borderRadius: 16, padding: 36, maxWidth: 460, width: "100%", textAlign: "center", boxShadow: "var(--shadow-md)" }}>
-        <div style={{ fontSize: 44, marginBottom: 12 }}>↩️</div>
+        <div style={{ fontSize: 44, marginBottom: 12 }}><WorkspaceIcon name="back" /></div>
         <h1 style={{ fontSize: 22, fontWeight: 800, color: "var(--navy)", margin: "0 0 8px" }}>Payment cancelled</h1>
         <p style={{ color: "var(--ink-muted)", fontSize: 14, margin: "0 0 20px" }}>Checkout was cancelled. If you completed a payment, check your billing history for its confirmed status.</p>
         <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>

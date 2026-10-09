@@ -37,7 +37,7 @@ async function createCertificate(tx: Tx, actor: Actor, ctx: IssueContext, user: 
     },
   });
   await audit(actor, "certificate.issued", "certificate", cert.id, { certId, talentId: user.id, projectId: ctx.projectId }, tx);
-  await notify(user.id, "certificate.issued", "Certificate issued 🏅", `Your certificate for "${ctx.title}" from ${issuerName} is ready.`, `/talent/dashboard?tab=certificates`, tx);
+    await notify(user.id, "certificate.issued", "Certificate issued", `Your certificate for "${ctx.title}" from ${issuerName} is ready.`, `/talent/dashboard?tab=certificates`, tx);
   return cert.id;
 }
 
@@ -149,7 +149,7 @@ function certificateIssuedHtml(cert: { certId: string; recipientName: string; ti
   const page = certificatePageUrl(cert.certId), verify = certificateVerifyUrl(cert.certId), li = linkedInAddUrl(cert);
   return `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#16233A">
   <div style="padding:20px 0;border-bottom:2px solid #0F2A4A"><strong style="font-size:20px;color:#0F2A4A">Certi<span style="color:#C9A227">Task</span></strong></div>
-  <h2 style="font-size:20px;margin:24px 0 8px">Congratulations, ${cert.recipientName} 🏅</h2>
+      <h2 style="font-size:20px;margin:24px 0 8px">Congratulations, ${cert.recipientName}</h2>
   <p>Your certificate for <strong>${cert.title}</strong>, issued by ${cert.issuerName}, is attached as a PDF and live at the link below.</p>
   <p style="margin:24px 0"><a href="${page}" style="background:#0F2A4A;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:bold">View certificate</a>
   &nbsp; <a href="${li}" style="background:#0A66C2;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:bold">Add to LinkedIn</a></p>

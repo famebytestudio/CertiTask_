@@ -1,5 +1,7 @@
 "use client";
 
+import { WorkspaceIcon } from "@/components/dashboard/WorkspaceIcon";
+
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Btn, Notice, SectionHeader, StatusBadge, daysUntil, formatDate } from "@/components/dashboard/ui";
@@ -55,7 +57,7 @@ export function BillingTab({ onChanged, audience = "client" }: { onChanged: () =
 
   return (
     <div>
-      <SectionHeader icon="💳" title="Billing" subtitle={audience === "talent" ? `Your first ${data.freePosts} project requests are free. After that, pick a prepaid ${data.periodDays}-day plan to keep applying. Prices in USD; Safepay settles PKR.` : `Your first ${data.freePosts} published projects are free once verified. After that, pick a prepaid ${data.periodDays}-day plan. Prices in USD; Safepay settles PKR.`} />
+      <SectionHeader icon={<WorkspaceIcon name="billing" />} title="Billing" subtitle={audience === "talent" ? `Your first ${data.freePosts} project requests are free. After that, pick a prepaid ${data.periodDays}-day plan to keep applying. Prices in USD; Safepay settles PKR.` : `Your first ${data.freePosts} published projects are free once verified. After that, pick a prepaid ${data.periodDays}-day plan. Prices in USD; Safepay settles PKR.`} />
       {error && <Notice kind="error">{error}</Notice>}
       {info && <Notice kind="success">{info}</Notice>}
 

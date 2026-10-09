@@ -1,8 +1,9 @@
 "use client";
 
+import { WorkspaceIcon } from "@/components/dashboard/WorkspaceIcon";
+
 import Link from "next/link";
-import { Banner } from "@/components/dashboard/DashboardShell";
-import { Btn, Notice, StatusBadge, VerificationBadge, formatDate } from "@/components/dashboard/ui";
+import { Btn, StatusBadge, VerificationBadge, formatDate } from "@/components/dashboard/ui";
 import type { DashboardResponse } from "@/lib/types";
 import type { TalentTab } from "@/app/talent/dashboard/page";
 
@@ -29,19 +30,19 @@ export function OverviewTab({ data, goTo }: { data: DashboardResponse; goTo: (t:
   const pendingApps = applications.filter(a => a.status === "PENDING" || a.status === "SHORTLISTED");
 
   const stages = [
-    { icon: "🎯", title: "Join & explore", desc: "Browse real projects posted by verified clients.", status: "done" },
-    { icon: "📝", title: "Complete your profile", desc: "Skills, education and portfolio make your applications stand out.", status: pct >= 60 ? "done" : "active" },
-    { icon: "📋", title: "Apply to a project", desc: "Pitch yourself (or create a team) for projects matching your skills.", status: applications.length > 0 ? "done" : pct >= 60 ? "active" : "pending" },
-    { icon: "🛠️", title: "Build & submit deliverables", desc: "Once selected, build the solution and submit your work before the deadline.", status: submissions.length > 0 ? "done" : selected.length > 0 ? "active" : "pending" },
-    { icon: "✅", title: "Client review & approval", desc: "The client evaluates your deliverables and approves the project.", status: submissions.some(s => s.status === "APPROVED") ? "done" : submissions.length > 0 ? "active" : "pending" },
-    { icon: "🏅", title: "Earn verified credentials", desc: "Receive a permanent, publicly verifiable certificate in your name.", status: certificates.length > 0 ? "done" : "pending" },
+    { icon: <WorkspaceIcon name="target" />, title: "Join & explore", desc: "Browse real projects posted by verified clients.", status: "done" },
+    { icon: <WorkspaceIcon name="edit" />, title: "Complete your profile", desc: "Skills, education and portfolio make your applications stand out.", status: pct >= 60 ? "done" : "active" },
+    { icon: <WorkspaceIcon name="applications" />, title: "Apply to a project", desc: "Pitch yourself (or create a team) for projects matching your skills.", status: applications.length > 0 ? "done" : pct >= 60 ? "active" : "pending" },
+    { icon: <WorkspaceIcon name="tools" />, title: "Build & submit deliverables", desc: "Once selected, build the solution and submit your work before the deadline.", status: submissions.length > 0 ? "done" : selected.length > 0 ? "active" : "pending" },
+    { icon: <WorkspaceIcon name="check" />, title: "Client review & approval", desc: "The client evaluates your deliverables and approves the project.", status: submissions.some(s => s.status === "APPROVED") ? "done" : submissions.length > 0 ? "active" : "pending" },
+    { icon: <WorkspaceIcon name="certificates" />, title: "Earn verified credentials", desc: "Receive a permanent, publicly verifiable certificate in your name.", status: certificates.length > 0 ? "done" : "pending" },
   ];
 
   const stats = [
-    { label: "Available Projects", value: projects.length, icon: "🔎", color: "#0F2A4A", bg: "linear-gradient(135deg, rgba(15,42,74,0.06) 0%, rgba(15,42,74,0.02) 100%)", border: "rgba(15,42,74,0.12)", tab: "projects" as const, hint: "Open for applications" },
-    { label: "Active Applications", value: applications.length, icon: "📋", color: "#2B6CB0", bg: "linear-gradient(135deg, rgba(49,130,206,0.08) 0%, rgba(49,130,206,0.02) 100%)", border: "rgba(49,130,206,0.2)", tab: "applications" as const, hint: `${pendingApps.length} in review` },
-    { label: "Selected Projects", value: selected.length, icon: "🎯", color: "#B7791F", bg: "linear-gradient(135deg, rgba(236,201,75,0.14) 0%, rgba(236,201,75,0.04) 100%)", border: "rgba(201,162,39,0.3)", tab: "submissions" as const, hint: awaitingSubmission.length > 0 ? `${awaitingSubmission.length} ready to submit` : "All work submitted" },
-    { label: "Earned Certificates", value: certificates.length, icon: "🏅", color: "#276749", bg: "linear-gradient(135deg, rgba(56,161,105,0.1) 0%, rgba(56,161,105,0.03) 100%)", border: "rgba(56,161,105,0.25)", tab: "certificates" as const, hint: "Verifiable credentials" },
+    { label: "Available Projects", value: projects.length, icon: <WorkspaceIcon name="projects" />, color: "#0F2A4A", bg: "linear-gradient(135deg, rgba(15,42,74,0.06) 0%, rgba(15,42,74,0.02) 100%)", border: "rgba(15,42,74,0.12)", tab: "projects" as const, hint: "Open for applications" },
+    { label: "Active Applications", value: applications.length, icon: <WorkspaceIcon name="applications" />, color: "#2B6CB0", bg: "linear-gradient(135deg, rgba(49,130,206,0.08) 0%, rgba(49,130,206,0.02) 100%)", border: "rgba(49,130,206,0.2)", tab: "applications" as const, hint: `${pendingApps.length} in review` },
+    { label: "Selected Projects", value: selected.length, icon: <WorkspaceIcon name="target" />, color: "#B7791F", bg: "linear-gradient(135deg, rgba(236,201,75,0.14) 0%, rgba(236,201,75,0.04) 100%)", border: "rgba(201,162,39,0.3)", tab: "submissions" as const, hint: awaitingSubmission.length > 0 ? `${awaitingSubmission.length} ready to submit` : "All work submitted" },
+    { label: "Earned Certificates", value: certificates.length, icon: <WorkspaceIcon name="certificates" />, color: "#276749", bg: "linear-gradient(135deg, rgba(56,161,105,0.1) 0%, rgba(56,161,105,0.03) 100%)", border: "rgba(56,161,105,0.25)", tab: "certificates" as const, hint: "Verifiable credentials" },
   ];
 
   return (
@@ -103,7 +104,7 @@ export function OverviewTab({ data, goTo }: { data: DashboardResponse; goTo: (t:
           </div>
 
           <h1 style={{ fontSize: 28, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: -0.5, lineHeight: 1.2 }}>
-            Welcome back, {profile.name} 👋
+            Welcome back, {profile.name} <WorkspaceIcon name="wave" />
           </h1>
           <p style={{ color: "rgba(255,255,255,0.72)", fontSize: 14, marginTop: 8, marginBottom: 0, maxWidth: 640, lineHeight: 1.5 }}>
             Work on real-world projects from vetted clients, collaborate in teams, and build a verified portfolio of verifiable certificates.
@@ -115,7 +116,7 @@ export function OverviewTab({ data, goTo }: { data: DashboardResponse; goTo: (t:
               onClick={() => goTo("projects")}
               style={{ padding: "10px 20px", fontSize: 13, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 6 }}
             >
-              <span>🔎</span> Explore Open Projects
+              <span><WorkspaceIcon name="projects" /></span> Explore Open Projects
             </Btn>
             {awaitingSubmission.length > 0 && (
               <Btn
@@ -123,7 +124,7 @@ export function OverviewTab({ data, goTo }: { data: DashboardResponse; goTo: (t:
                 onClick={() => goTo("submissions")}
                 style={{ padding: "10px 18px", fontSize: 13, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 6 }}
               >
-                <span>📤</span> Submit Deliverables ({awaitingSubmission.length})
+                <span><WorkspaceIcon name="submissions" /></span> Submit Deliverables ({awaitingSubmission.length})
               </Btn>
             )}
             <Link
@@ -144,7 +145,7 @@ export function OverviewTab({ data, goTo }: { data: DashboardResponse; goTo: (t:
                 transition: "all 0.15s",
               }}
             >
-              <span>👤</span> Public Profile ↗
+              <span><WorkspaceIcon name="profile" /></span> Public Profile ↗
             </Link>
           </div>
         </div>
@@ -166,7 +167,7 @@ export function OverviewTab({ data, goTo }: { data: DashboardResponse; goTo: (t:
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <span style={{ fontSize: 24 }}>{profile.verificationStatus === "PENDING_REVIEW" ? "⏳" : "🪪"}</span>
+            <span style={{ fontSize: 24 }}>{profile.verificationStatus === "PENDING_REVIEW" ? <WorkspaceIcon name="clock" /> : <WorkspaceIcon name="verification" />}</span>
             <div>
               <div
                 style={{
@@ -268,7 +269,7 @@ export function OverviewTab({ data, goTo }: { data: DashboardResponse; goTo: (t:
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <span style={{ fontSize: 30 }}>🎉</span>
+            <span style={{ fontSize: 30 }}><WorkspaceIcon name="celebrate" /></span>
             <div>
               <h4 style={{ fontSize: 16, fontWeight: 800, color: "#1C4532", margin: "0 0 4px" }}>
                 Selected for {awaitingSubmission.length} project{awaitingSubmission.length > 1 ? "s" : ""} — Ready for Submission!
@@ -297,7 +298,7 @@ export function OverviewTab({ data, goTo }: { data: DashboardResponse; goTo: (t:
           }}
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
-            <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--navy)", margin: 0 }}>📊 Profile Strength</h3>
+            <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--navy)", margin: 0 }}><WorkspaceIcon name="chart" /> Profile Strength</h3>
             <span
               style={{
                 fontSize: 11,
@@ -308,7 +309,7 @@ export function OverviewTab({ data, goTo }: { data: DashboardResponse; goTo: (t:
                 borderRadius: 12,
               }}
             >
-              {pct >= 80 ? "⭐ All-Star" : pct >= 50 ? "⚡ Intermediate" : "🌱 Getting Started"}
+              {pct >= 80 ? "All-Star" : pct >= 50 ? "Intermediate" : "Getting Started"}
             </span>
           </div>
 
@@ -363,7 +364,7 @@ export function OverviewTab({ data, goTo }: { data: DashboardResponse; goTo: (t:
             style={{ width: "100%", padding: "10px", fontWeight: 700, display: "flex", justifyContent: "center", alignItems: "center", gap: 6 }}
             onClick={() => goTo("profile")}
           >
-            <span>✏️</span> Edit & Enhance Profile
+            <span><WorkspaceIcon name="edit" /></span> Edit & Enhance Profile
           </Btn>
         </div>
 
@@ -378,7 +379,7 @@ export function OverviewTab({ data, goTo }: { data: DashboardResponse; goTo: (t:
           }}
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-            <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--navy)", margin: 0 }}>✅ Profile Checklist</h3>
+            <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--navy)", margin: 0 }}><WorkspaceIcon name="check" /> Profile Checklist</h3>
             <span style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-subtle)" }}>
               {items.filter(i => i.done).length} of {items.length} completed
             </span>
@@ -451,7 +452,7 @@ export function OverviewTab({ data, goTo }: { data: DashboardResponse; goTo: (t:
         }}
       >
         <div style={{ marginBottom: 18 }}>
-          <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--navy)", margin: "0 0 4px" }}>🗺️ Your Talent Journey</h3>
+          <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--navy)", margin: "0 0 4px" }}><WorkspaceIcon name="map" /> Your Talent Journey</h3>
           <p style={{ fontSize: 13, color: "var(--ink-muted)", margin: 0 }}>Follow this clear path to complete real work and earn verified certificates.</p>
         </div>
 
@@ -548,7 +549,7 @@ export function OverviewTab({ data, goTo }: { data: DashboardResponse; goTo: (t:
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <div>
-              <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--navy)", margin: "0 0 2px" }}>🏅 Recent Verified Certificates</h3>
+              <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--navy)", margin: "0 0 2px" }}><WorkspaceIcon name="certificates" /> Recent Verified Certificates</h3>
               <p style={{ fontSize: 12, color: "var(--ink-muted)", margin: 0 }}>Permanent proof of your completed projects.</p>
             </div>
             <button
@@ -585,7 +586,7 @@ export function OverviewTab({ data, goTo }: { data: DashboardResponse; goTo: (t:
               >
                 <div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, marginBottom: 8 }}>
-                    <span style={{ fontSize: 24 }}>🏅</span>
+                    <span style={{ fontSize: 24 }}><WorkspaceIcon name="certificates" /></span>
                     <StatusBadge status={c.status} />
                   </div>
                   <Link

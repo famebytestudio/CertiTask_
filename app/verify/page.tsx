@@ -72,7 +72,9 @@ export default function VerifyPage() {
 
   useEffect(() => {
     const fromUrl = new URLSearchParams(window.location.search).get("id");
-    if (fromUrl) { setCertId(fromUrl); void lookup(fromUrl); }
+    if (!fromUrl) return;
+    const timer = window.setTimeout(() => { setCertId(fromUrl); void lookup(fromUrl); }, 0);
+    return () => window.clearTimeout(timer);
   }, [lookup]);
 
   const submit = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); void lookup(certId); };

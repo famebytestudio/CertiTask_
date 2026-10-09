@@ -1,8 +1,9 @@
 "use client";
 
+import { WorkspaceIcon } from "@/components/dashboard/WorkspaceIcon";
+
 import Link from "next/link";
-import { Banner } from "@/components/dashboard/DashboardShell";
-import { Btn, Notice, StatusBadge, VerificationBadge, formatDate } from "@/components/dashboard/ui";
+import { Btn, StatusBadge, VerificationBadge, formatDate } from "@/components/dashboard/ui";
 import type { DashboardResponse } from "@/lib/types";
 import type { ClientTab } from "@/app/client/dashboard/page";
 
@@ -24,7 +25,7 @@ export function OverviewTab({
     {
       label: "Active Projects",
       value: activeProjects.length,
-      icon: "🚀",
+      icon: <WorkspaceIcon name="rocket" />,
       color: "#0F2A4A",
       bg: "linear-gradient(135deg, rgba(15,42,74,0.06) 0%, rgba(15,42,74,0.02) 100%)",
       border: "rgba(15,42,74,0.12)",
@@ -34,7 +35,7 @@ export function OverviewTab({
     {
       label: "New Applications",
       value: newApps.length,
-      icon: "📋",
+      icon: <WorkspaceIcon name="applications" />,
       color: "#2B6CB0",
       bg: "linear-gradient(135deg, rgba(49,130,206,0.08) 0%, rgba(49,130,206,0.02) 100%)",
       border: "rgba(49,130,206,0.2)",
@@ -44,7 +45,7 @@ export function OverviewTab({
     {
       label: "Awaiting Review",
       value: reviewQueue.length,
-      icon: "📤",
+      icon: <WorkspaceIcon name="submissions" />,
       color: reviewQueue.length > 0 ? "#9B2C2C" : "var(--ink-muted)",
       bg: reviewQueue.length > 0
         ? "linear-gradient(135deg, rgba(229,62,62,0.12) 0%, rgba(229,62,62,0.04) 100%)"
@@ -56,7 +57,7 @@ export function OverviewTab({
     {
       label: "Certificates Issued",
       value: certificates.length,
-      icon: "🏅",
+      icon: <WorkspaceIcon name="certificates" />,
       color: "#276749",
       bg: "linear-gradient(135deg, rgba(56,161,105,0.1) 0%, rgba(56,161,105,0.03) 100%)",
       border: "rgba(56,161,105,0.25)",
@@ -112,7 +113,7 @@ export function OverviewTab({
           </div>
 
           <h1 style={{ fontSize: 28, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: -0.5, lineHeight: 1.2 }}>
-            Welcome, {profile.name} 👋
+            Welcome, {profile.name} <WorkspaceIcon name="wave" />
           </h1>
           <p style={{ color: "rgba(255,255,255,0.72)", fontSize: 14, marginTop: 8, marginBottom: 0, maxWidth: 640, lineHeight: 1.5 }}>
             Post project challenges, collaborate with vetted talent and teams, review completed deliverables, and issue permanent verified certificates.
@@ -124,7 +125,7 @@ export function OverviewTab({
               onClick={() => goTo("post-project")}
               style={{ padding: "10px 20px", fontSize: 13, fontWeight: 800, display: "inline-flex", alignItems: "center", gap: 6 }}
             >
-              <span>➕</span> Post a New Project
+              <span><WorkspaceIcon name="post" /></span> Post a New Project
             </Btn>
             {reviewQueue.length > 0 && (
               <Btn
@@ -132,7 +133,7 @@ export function OverviewTab({
                 onClick={() => goTo("submissions")}
                 style={{ padding: "10px 18px", fontSize: 13, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 6 }}
               >
-                <span>📤</span> Review Submissions ({reviewQueue.length})
+                <span><WorkspaceIcon name="submissions" /></span> Review Submissions ({reviewQueue.length})
               </Btn>
             )}
             <Link
@@ -152,7 +153,7 @@ export function OverviewTab({
                 gap: 6,
               }}
             >
-              <span>🏢</span> Public Client Page ↗
+              <span><WorkspaceIcon name="building" /></span> Public Client Page ↗
             </Link>
           </div>
         </div>
@@ -174,7 +175,7 @@ export function OverviewTab({
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <span style={{ fontSize: 24 }}>{profile.verificationStatus === "PENDING_REVIEW" ? "⏳" : "🪪"}</span>
+            <span style={{ fontSize: 24 }}>{profile.verificationStatus === "PENDING_REVIEW" ? <WorkspaceIcon name="clock" /> : <WorkspaceIcon name="verification" />}</span>
             <div>
               <div
                 style={{
@@ -276,7 +277,7 @@ export function OverviewTab({
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <span style={{ fontSize: 30 }}>📥</span>
+            <span style={{ fontSize: 30 }}><WorkspaceIcon name="download" /></span>
             <div>
               <h4 style={{ fontSize: 16, fontWeight: 800, color: "#9B2C2C", margin: "0 0 4px" }}>
                 {reviewQueue.length} Submission{reviewQueue.length > 1 ? "s" : ""} Awaiting Your Evaluation
@@ -306,7 +307,7 @@ export function OverviewTab({
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <div>
-              <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--navy)", margin: 0 }}>🚀 Active Projects</h3>
+              <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--navy)", margin: 0 }}><WorkspaceIcon name="rocket" /> Active Projects</h3>
               <p style={{ fontSize: 12, color: "var(--ink-muted)", margin: "2px 0 0" }}>Manage your current listings and candidate applications.</p>
             </div>
             <button
@@ -326,7 +327,7 @@ export function OverviewTab({
 
           {projects.length === 0 ? (
             <div style={{ textAlign: "center", padding: "36px 0", border: "1px dashed var(--border)", borderRadius: 12, color: "var(--ink-subtle)" }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>📭</div>
+              <div style={{ fontSize: 32, marginBottom: 8 }}><WorkspaceIcon name="mail" /></div>
               <p style={{ margin: "0 0 12px", fontWeight: 600, color: "var(--navy)" }}>You haven&apos;t posted any projects yet.</p>
               <Btn variant="gold" small onClick={() => goTo("post-project")}>
                 + Post Your First Project
@@ -378,7 +379,7 @@ export function OverviewTab({
           }}
         >
           <div>
-            <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--navy)", margin: "0 0 4px" }}>⚡ Quick Actions</h3>
+            <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--navy)", margin: "0 0 4px" }}><WorkspaceIcon name="bolt" /> Quick Actions</h3>
             <p style={{ fontSize: 12, color: "var(--ink-muted)", margin: "0 0 16px" }}>Fast shortcuts to manage your client operations.</p>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -397,7 +398,7 @@ export function OverviewTab({
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ fontSize: 18 }}>➕</span>
+                  <span style={{ fontSize: 18 }}><WorkspaceIcon name="post" /></span>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: "var(--navy)" }}>Post a New Project</div>
                     <div style={{ fontSize: 11, color: "var(--ink-subtle)" }}>Set scope, deliverables and deadlines</div>
@@ -421,7 +422,7 @@ export function OverviewTab({
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ fontSize: 18 }}>📋</span>
+                  <span style={{ fontSize: 18 }}><WorkspaceIcon name="applications" /></span>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: "var(--navy)" }}>Review Candidate Pitches</div>
                     <div style={{ fontSize: 11, color: "var(--ink-subtle)" }}>{newApps.length} pending candidate pitches</div>
@@ -445,7 +446,7 @@ export function OverviewTab({
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ fontSize: 18 }}>💳</span>
+                  <span style={{ fontSize: 18 }}><WorkspaceIcon name="billing" /></span>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: "var(--navy)" }}>Subscription &amp; Posting Quotas</div>
                     <div style={{ fontSize: 11, color: "var(--ink-subtle)" }}>Manage billing, invoices &amp; limits</div>

@@ -1,5 +1,7 @@
 "use client";
 
+import { WorkspaceIcon } from "@/components/dashboard/WorkspaceIcon";
+
 import React, { useEffect, useRef, useState } from "react";
 import type { Order, Receipt } from "./models";
 import { PosTerminalAnimation } from "./PosTerminalAnimation";
@@ -92,7 +94,7 @@ export function OrderPlacedScreen({ order, receipt, onViewReceipt, onDone }: Pro
             margin: "0 0 8px",
           }}
         >
-          Order placed 🎉
+          Order placed <WorkspaceIcon name="celebrate" />
         </h1>
         <p style={{ fontSize: 14, color: "var(--ink-muted)", lineHeight: 1.6, margin: 0 }}>
           Your {order.planName} plan is now active. You can start posting projects right away.
@@ -122,18 +124,18 @@ export function OrderPlacedScreen({ order, receipt, onViewReceipt, onDone }: Pro
           <SummaryRow
             label="Paid"
             value={`${usd(order.total)} ${order.currency}`}
-            icon="💳"
+            icon={<WorkspaceIcon name="billing" />}
           />
           <SummaryRow
             label="Receipt"
             value={receipt.receiptNo}
-            icon="🧾"
+            icon={<WorkspaceIcon name="receipt" />}
             isLast
           />
           <SummaryRow
             label="Status"
             value={arrivesText}
-            icon="⚡"
+            icon={<WorkspaceIcon name="bolt" />}
             isLast
           />
         </div>
@@ -236,7 +238,7 @@ function SummaryRow({
   value,
   isLast,
 }: {
-  icon: string;
+  icon: React.ReactNode;
   label: string;
   value: string;
   isLast?: boolean;

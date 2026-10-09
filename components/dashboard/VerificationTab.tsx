@@ -1,5 +1,7 @@
 "use client";
 
+import { WorkspaceIcon } from "@/components/dashboard/WorkspaceIcon";
+
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Btn, Field, Notice, SectionHeader, VerificationBadge, inputStyle, selectStyle, formatDate } from "@/components/dashboard/ui";
@@ -135,7 +137,7 @@ export function VerificationTab({ profile, onChanged }: { profile: ProfileDto; o
 
   return (
     <div>
-      <SectionHeader icon="🪪" title={isOrg ? "Organization verification" : "Identity verification"}
+      <SectionHeader icon={<WorkspaceIcon name="verification" />} title={isOrg ? "Organization verification" : "Identity verification"}
         subtitle={isOrg ? "Prove your organization is real. Verified clients can publish projects and their name appears on certificates as a Verified Organization." : profile.role === "CLIENT" ? "Verified clients can publish projects. Your legal name appears on certificates you issue." : "Certificates are issued in the legal name on your ID. Verification is reviewed by a person, usually within a day."} />
 
       {/* Step 1: email */}

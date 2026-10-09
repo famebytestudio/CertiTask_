@@ -46,10 +46,6 @@ export async function POST(req: Request) {
         },
       });
 
-      await prisma.passwordResetToken.deleteMany({
-        where: { userId: user.id, id: { not: token.id } },
-      });
-
       try {
         await sendPasswordResetEmail(
           user.email,

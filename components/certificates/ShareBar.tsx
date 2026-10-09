@@ -1,5 +1,7 @@
 "use client";
 
+import { WorkspaceIcon } from "@/components/dashboard/WorkspaceIcon";
+
 import { useState } from "react";
 
 const btn = (bg: string, color: string): React.CSSProperties => ({
@@ -20,10 +22,10 @@ export function ShareBar({ pageUrl, linkedInUrl, pdfHref, valid }: { pageUrl: st
 
   return (
     <div className="no-print" style={{ marginTop: 32, display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
-      <button onClick={copy} style={btn("#fff", "#07203b")} aria-live="polite">{copied ? "✓ Link copied" : "🔗 Copy link"}</button>
+      <button onClick={copy} style={btn("#fff", "#07203b")} aria-live="polite">{copied ? "✓ Link copied" : "Copy link"}</button>
       {valid && <a href={linkedInUrl} target="_blank" rel="noopener noreferrer" style={btn("#0A66C2", "#fff")}>in&nbsp; Add to LinkedIn</a>}
-      {pdfHref && valid && <a href={pdfHref} style={btn("#07203b", "#fff")}>📥 Download PDF</a>}
-      <button onClick={() => window.print()} style={btn("#D4A017", "#07203b")}>🖨 Print</button>
+      {pdfHref && valid && <a href={pdfHref} style={btn("#07203b", "#fff")}><WorkspaceIcon name="download" /> Download PDF</a>}
+      <button onClick={() => window.print()} style={btn("#D4A017", "#07203b")}><WorkspaceIcon name="print" /> Print</button>
     </div>
   );
 }

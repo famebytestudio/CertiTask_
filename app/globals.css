@@ -1497,6 +1497,31 @@ img, svg, video, canvas, iframe {
     max-width: 100%;
   }
 
+  .mobile-dashboard-menu-button,
+  .mobile-dashboard-drawer-actions {
+    display: flex !important;
+  }
+
+  .mobile-dashboard-sidebar {
+    background: var(--paper);
+    padding-bottom: max(24px, env(safe-area-inset-bottom)) !important;
+  }
+
+  .mobile-dashboard-close-button {
+    display: block;
+    margin: 0 0 12px auto;
+    width: 44px;
+    height: 44px;
+    cursor: pointer;
+  }
+
+  .mobile-dashboard-backdrop.is-open {
+    position: fixed;
+    inset: 0;
+    background: rgba(7, 21, 38, 0.5);
+    z-index: 65;
+  }
+
   .mobile-dashboard-sidebar {
     position: fixed !important;
     top: 0 !important;

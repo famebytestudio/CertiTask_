@@ -1,5 +1,7 @@
 "use client";
 
+import { WorkspaceIcon } from "@/components/dashboard/WorkspaceIcon";
+
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ProfilePhoto } from "@/components/dashboard/ProfilePhoto";
@@ -73,7 +75,7 @@ export function ProfileTab({ profile, onSaved }: { profile: ProfileDto; onSaved:
     onSaved();
   }
 
-  const section = (icon: string, title: string, subtitle: string, children: React.ReactNode) => (
+  const section = (icon: React.ReactNode, title: string, subtitle: string, children: React.ReactNode) => (
     <div
       style={{
         background: "#fff",
@@ -100,7 +102,7 @@ export function ProfileTab({ profile, onSaved }: { profile: ProfileDto; onSaved:
   return (
     <div>
       <SectionHeader
-        icon="✏️"
+        icon={<WorkspaceIcon name="edit" />}
         title="Edit Profile"
         subtitle="Manage your public profile information, academic credentials, and portfolio links seen by hiring clients."
         action={
@@ -121,7 +123,7 @@ export function ProfileTab({ profile, onSaved }: { profile: ProfileDto; onSaved:
               gap: 6,
             }}
           >
-            <span>👤</span> Preview Public Profile ↗
+            <span><WorkspaceIcon name="profile" /></span> Preview Public Profile ↗
           </Link>
         }
       />
@@ -142,7 +144,7 @@ export function ProfileTab({ profile, onSaved }: { profile: ProfileDto; onSaved:
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontSize: 22 }}>🪪</span>
+          <span style={{ fontSize: 22 }}><WorkspaceIcon name="verification" /></span>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{ fontSize: 14, fontWeight: 800, color: "var(--navy)" }}>Identity Verification</span>
@@ -182,7 +184,7 @@ export function ProfileTab({ profile, onSaved }: { profile: ProfileDto; onSaved:
           boxShadow: "var(--shadow-sm)",
         }}
       >
-        <div style={{ fontSize: 16, fontWeight: 800, color: "var(--navy)", marginBottom: 4 }}>📸 Profile Photo</div>
+        <div style={{ fontSize: 16, fontWeight: 800, color: "var(--navy)", marginBottom: 4 }}><WorkspaceIcon name="camera" /> Profile Photo</div>
         <div style={{ fontSize: 12, color: "var(--ink-muted)", marginBottom: 16 }}>
           Upload a clear photo or professional headshot for client trust.
         </div>
@@ -192,7 +194,7 @@ export function ProfileTab({ profile, onSaved }: { profile: ProfileDto; onSaved:
       <form onSubmit={save}>
         {/* Personal Details */}
         {section(
-          "👤",
+          <WorkspaceIcon name="profile" />,
           "Personal Information",
           "Your identity and contact details for client communications.",
           <>
@@ -259,7 +261,7 @@ export function ProfileTab({ profile, onSaved }: { profile: ProfileDto; onSaved:
 
         {/* Education */}
         {section(
-          "🎓",
+          <WorkspaceIcon name="graduation" />,
           "Academic Background",
           "Your university and degree qualifications.",
           <>
@@ -314,7 +316,7 @@ export function ProfileTab({ profile, onSaved }: { profile: ProfileDto; onSaved:
 
         {/* Skills & Bio */}
         {section(
-          "🛠️",
+          <WorkspaceIcon name="tools" />,
           "Skills, Bio & Links",
           "Showcase your technical capabilities, background story, and portfolio.",
           <>

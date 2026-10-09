@@ -1,10 +1,10 @@
 "use client";
 
+import { WorkspaceIcon } from "@/components/dashboard/WorkspaceIcon";
+
 import { useState } from "react";
-import Link from "next/link";
 import {
   Btn,
-  Card,
   EmptyState,
   Modal,
   Notice,
@@ -125,7 +125,7 @@ export function SubmissionsTab({
             flexWrap: "wrap",
           }}
         >
-          <span style={{ fontSize: 16 }}>🔗</span>
+          <span style={{ fontSize: 16 }}><WorkspaceIcon name="link" /></span>
           <span style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-subtle)", textTransform: "uppercase" }}>
             Deliverable Link:
           </span>
@@ -207,7 +207,7 @@ export function SubmissionsTab({
               }}
               style={{ padding: "10px 18px" }}
             >
-              💬 Request Changes / Feedback
+              <WorkspaceIcon name="message" /> Request Changes / Feedback
             </Btn>
           </div>
         )}
@@ -218,7 +218,7 @@ export function SubmissionsTab({
   return (
     <div>
       <SectionHeader
-        icon="📤"
+        icon={<WorkspaceIcon name="submissions" />}
         title="Review Deliverables"
         subtitle="Evaluate submitted project links and code repositories. Approving automatically generates verified certificates for all confirmed team members."
       />
@@ -227,7 +227,7 @@ export function SubmissionsTab({
 
       {issued !== null && (
         <Notice kind="success">
-          🎉 Deliverables approved! <strong>{issued.issued} certificate{issued.issued !== 1 ? "s" : ""}</strong> have been minted and emailed to the recipients.
+          <WorkspaceIcon name="celebrate" /> Deliverables approved! <strong>{issued.issued} certificate{issued.issued !== 1 ? "s" : ""}</strong> have been minted and emailed to the recipients.
           {issued.held > 0 && (
             <span>
               {" "}
@@ -239,7 +239,7 @@ export function SubmissionsTab({
 
       {submissions.length === 0 ? (
         <EmptyState
-          icon="📂"
+          icon={<WorkspaceIcon name="folder" />}
           title="No deliverables submitted yet"
           hint="When a selected team submits their repository or live project link, it will appear here for evaluation."
         />
@@ -248,7 +248,7 @@ export function SubmissionsTab({
           {pending.length > 0 && (
             <div>
               <div style={{ fontSize: 13, fontWeight: 800, color: "#9B2C2C", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 12 }}>
-                ⚡ Action Required: Awaiting Your Evaluation ({pending.length})
+                <WorkspaceIcon name="bolt" /> Action Required: Awaiting Your Evaluation ({pending.length})
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 {pending.map(s => (

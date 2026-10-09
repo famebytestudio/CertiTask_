@@ -1,10 +1,11 @@
 "use client";
 
+import { WorkspaceIcon } from "@/components/dashboard/WorkspaceIcon";
+
 import { useState } from "react";
 import Link from "next/link";
 import {
   Btn,
-  Card,
   EmptyState,
   Field,
   Modal,
@@ -152,7 +153,7 @@ export function TeamsTab({
                     borderRadius: 6,
                   }}
                 >
-                  👑 Team Lead
+                  <WorkspaceIcon name="crown" /> Team Lead
                 </span>
               )}
             </div>
@@ -315,7 +316,7 @@ export function TeamsTab({
                 }}
               >
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--navy)" }}>📧 {i.email}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--navy)" }}><WorkspaceIcon name="mail" /> {i.email}</div>
                   <div style={{ fontSize: 11, color: "var(--ink-subtle)" }}>
                     Invited via email · Pending signup · Expires {formatDate(i.expiresAt)}
                   </div>
@@ -354,7 +355,7 @@ export function TeamsTab({
               borderLeft: "3px solid var(--navy)",
             }}
           >
-            🔒 Roster locked because the team application is in review. Withdraw the application from &quot;My Applications&quot; if you need to alter the team roster.
+            <WorkspaceIcon name="lock" /> Roster locked because the team application is in review. Withdraw the application from &quot;My Applications&quot; if you need to alter the team roster.
           </div>
         )}
 
@@ -431,7 +432,7 @@ export function TeamsTab({
   return (
     <div>
       <SectionHeader
-        icon="👥"
+        icon={<WorkspaceIcon name="teams" />}
         title="My Teams"
         subtitle="Form teams with colleagues, invite partners by email, and apply to collaborative projects together. Every team member receives a verified certificate upon client approval."
       />
@@ -467,7 +468,7 @@ export function TeamsTab({
                 >
                   <div>
                     <div style={{ fontSize: 16, fontWeight: 800, color: "var(--navy)" }}>
-                      👥 {t.lead.name} invited you to join &ldquo;{t.name}&rdquo;
+                      <WorkspaceIcon name="teams" /> {t.lead.name} invited you to join &ldquo;{t.name}&rdquo;
                     </div>
                     <div style={{ fontSize: 13, color: "var(--ink-muted)", marginTop: 4 }}>
                       Project: <strong>{t.project.title}</strong> · {t.project.client.name} (Max team size: {t.project.teamCap})
@@ -511,7 +512,7 @@ export function TeamsTab({
       {/* Active Teams List */}
       {myTeams.length === 0 ? (
         <EmptyState
-          icon="👥"
+          icon={<WorkspaceIcon name="teams" />}
           title="You're not on any teams yet"
           hint="Explore Find Projects to create a team for collaborative projects, or wait for invitations from team leaders."
           action={

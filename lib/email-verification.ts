@@ -23,21 +23,23 @@ function hashOtp(userId: string, otp: string): string {
 
 /** Send a fresh 6-digit OTP to the user's email address. */
 export async function sendEmailVerification(user: { id: string; email: string; name: string }): Promise<void> {
-  const otp = generateOtp();
-  const tokenHash = hashOtp(user.id, otp);
-
-
-  // Invalidate any previous unused tokens for this user so only one OTP is valid at a time
-  await prisma.emailVerificationToken.deleteMany({ where: { userId: user.id, usedAt: null } }).catch(() => {});
-
-  // Create the new OTP token in DB
-  await prisma.emailVerificationToken.create({
-    data: {
-      userId: user.id,
-      tokenHash,
-      expiresAt: new Date(Date.now() + OTP_TTL_MS),
-    },
-  });
+  // Keep delivered codes usable until expiry if a resend fails or overlaps.
+  // Retry random collisions rather than reviving or overwriting an old code.
+  const issue = async () => {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const otp = generateOtp();
+      try {
+        const token = await prisma.emailVerificationToken.create({
+          data: { userId: user.id, tokenHash: hashOtp(user.id, otp), expiresAt: new Date(Date.now() + OTP_TTL_MS) },
+        });
+        return { otp, token };
+      } catch (error) {
+        if (attempt === 2 || !error || typeof error !== "object" || !("code" in error) || error.code !== "P2002") throw error;
+      }
+    }
+    throw new Error("Unable to issue a verification code");
+  };
+  const { otp, token } = await issue();
 
   try {
     await sendVerifyEmailOtp(user.email, user.name, otp);
@@ -46,7 +48,7 @@ export async function sendEmailVerification(user: { id: string; email: string; n
     console.error("[send-otp] OTP email delivery failed:", err);
     // Roll back the token we just created so user can request a fresh one
     await prisma.emailVerificationToken
-      .deleteMany({ where: { userId: user.id, tokenHash, usedAt: null } })
+      .deleteMany({ where: { id: token.id, expiresAt: token.expiresAt, usedAt: null } })
       .catch(() => {});
     throw err;
   }

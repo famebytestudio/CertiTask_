@@ -1,4 +1,5 @@
 "use client";
+import { WorkspaceIcon } from "@/components/dashboard/WorkspaceIcon";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -24,7 +25,7 @@ export function Navbar() {
         <Link className="wordmark" href="/" onClick={() => setOpen(false)} aria-label="CertiTask home"><Logo className="brand-symbol" />CertiTask<span className="brand-period">.</span></Link>
         <div className="desktop-links">{links.map(([label, href]) => <Link key={href} href={href} aria-current={pathname === href ? "page" : undefined}>{label}</Link>)}</div>
         <div className="desktop-actions"><Link href="/auth/login">Log in</Link><Link href="/auth/signup" className="ct-button ct-button-dark">Get started <span aria-hidden="true">↗</span></Link></div>
-        <button className="nav-toggle" aria-expanded={open} aria-controls="site-mobile-menu" aria-label={open ? "Close navigation" : "Open navigation"} onClick={() => setOpen(!open)}><span aria-hidden="true">{open ? "×" : "☰"}</span></button>
+        <button className="nav-toggle" aria-expanded={open} aria-controls="site-mobile-menu" aria-label={open ? "Close navigation" : "Open navigation"} onClick={() => setOpen(!open)}><WorkspaceIcon name={open ? "close" : "menu"} /></button>
       </nav>
       {open && <div className="mobile-links" id="site-mobile-menu">{links.map(([label, href]) => <Link key={href} href={href} aria-current={pathname === href ? "page" : undefined} onClick={() => setOpen(false)}>{label}<span aria-hidden="true">↗</span></Link>)}<div className="mobile-nav-actions"><Link href="/auth/login" onClick={() => setOpen(false)}>Log in</Link><Link href="/auth/signup" className="ct-button ct-button-dark" onClick={() => setOpen(false)}>Get started ↗</Link></div></div>}
     </header>

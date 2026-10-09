@@ -1,5 +1,7 @@
 "use client";
 
+import { WorkspaceIcon } from "@/components/dashboard/WorkspaceIcon";
+
 import { Suspense } from "react";
 import Link from "next/link";
 import {
@@ -51,27 +53,27 @@ function TalentDashboard() {
   const { pct } = profileCompletion(profile);
 
   const tabs: TabDef<TalentTab>[] = [
-    { id: "overview", label: "Overview", icon: "🏠" },
-    { id: "projects", label: "Find Projects", icon: "🔎", badge: projects.length },
-    { id: "teams", label: "My Teams", icon: "👥", badge: pendingInvites, badgeColor: "#97640E" },
-    { id: "applications", label: "My Applications", icon: "📋", badge: applications.length > 0 ? applications.length : undefined },
-    { id: "submissions", label: "My Submissions", icon: "📤", badge: needsSubmission, badgeColor: "#E53E3E" },
+    { id: "overview", label: "Overview", icon: <WorkspaceIcon name="overview" /> },
+    { id: "projects", label: "Find Projects", icon: <WorkspaceIcon name="projects" />, badge: projects.length },
+    { id: "teams", label: "My Teams", icon: <WorkspaceIcon name="teams" />, badge: pendingInvites, badgeColor: "#97640E" },
+    { id: "applications", label: "My Applications", icon: <WorkspaceIcon name="applications" />, badge: applications.length > 0 ? applications.length : undefined },
+    { id: "submissions", label: "My Submissions", icon: <WorkspaceIcon name="submissions" />, badge: needsSubmission, badgeColor: "#E53E3E" },
     {
       id: "certificates",
       label: "My Certificates",
-      icon: "🏅",
+      icon: <WorkspaceIcon name="certificates" />,
       badge: totalCertificates,
       badgeColor: (data.certificateHolds?.length ?? 0) > 0 ? "#97640E" : "var(--success)",
     },
-    { id: "billing", label: "Premium Plan", icon: "💳" },
+    { id: "billing", label: "Premium Plan", icon: <WorkspaceIcon name="billing" /> },
     {
       id: "verification",
       label: "ID Verification",
-      icon: "🪪",
+      icon: <WorkspaceIcon name="verification" />,
       badge: profile.verificationStatus === "VERIFIED" ? 0 : 1,
       badgeColor: profile.verificationStatus === "PENDING_REVIEW" ? "#97640E" : "#E53E3E",
     },
-    { id: "profile", label: "Edit Profile", icon: "✏️" },
+    { id: "profile", label: "Edit Profile", icon: <WorkspaceIcon name="edit" /> },
   ];
 
   const tabGroups: TabGroup<TalentTab>[] = [
@@ -122,7 +124,7 @@ function TalentDashboard() {
                 boxShadow: "0 0 8px var(--success)",
               }}
             />
-            ⚡ Talent Hub
+            <WorkspaceIcon name="bolt" /> Talent Hub
           </span>
         </div>
       }
@@ -160,7 +162,7 @@ function TalentDashboard() {
               transition: "transform 0.15s",
             }}
           >
-            <span>🔎</span> Find Projects
+            <span><WorkspaceIcon name="projects" /></span> Find Projects
           </button>
           <Link
             href={`/talents/${profile.id}`}
@@ -180,7 +182,7 @@ function TalentDashboard() {
               transition: "background 0.15s",
             }}
           >
-            <span>👤</span> Portfolio ↗
+            <span><WorkspaceIcon name="profile" /></span> Portfolio ↗
           </Link>
         </>
       }

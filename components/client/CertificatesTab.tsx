@@ -1,5 +1,7 @@
 "use client";
 
+import { WorkspaceIcon } from "@/components/dashboard/WorkspaceIcon";
+
 import { useState } from "react";
 import Link from "next/link";
 import { Btn, Card, EmptyState, Modal, Notice, SectionHeader, SkillChips, StatusBadge, formatDate, textareaStyle } from "@/components/dashboard/ui";
@@ -33,7 +35,7 @@ export function CertificateGrid({ certificates, mode, onChanged }: { certificate
         {certificates.map(cert => (
           <Card key={cert.id} accent>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-              <span style={{ fontSize: 32 }}>🏅</span>
+              <span style={{ fontSize: 32 }}><WorkspaceIcon name="certificates" /></span>
               <StatusBadge status={cert.status} />
             </div>
             <h4 style={{ fontSize: 16, fontWeight: 800, color: "var(--navy)", margin: "0 0 6px" }}>{cert.title}</h4>
@@ -90,9 +92,9 @@ export function CertificateGrid({ certificates, mode, onChanged }: { certificate
 export function CertificatesTab({ certificates, onChanged }: { certificates: CertificateDto[]; onChanged: () => void }) {
   return (
     <div>
-      <SectionHeader icon="🏅" title="Issued certificates" subtitle="Every certificate issued under your name. Revocations are permanent and public." />
+      <SectionHeader icon={<WorkspaceIcon name="certificates" />} title="Issued certificates" subtitle="Every certificate issued under your name. Revocations are permanent and public." />
       {certificates.length === 0 ? (
-        <EmptyState icon="🎓" title="No certificates issued yet" hint="Approve a submission to issue certificates to the team." />
+        <EmptyState icon={<WorkspaceIcon name="graduation" />} title="No certificates issued yet" hint="Approve a submission to issue certificates to the team." />
       ) : (
         <CertificateGrid certificates={certificates} mode="issued" onChanged={onChanged} />
       )}

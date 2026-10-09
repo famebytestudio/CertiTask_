@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { parseResetToken } from "@/lib/reset-token";
 
 function LockIcon() {
   return (
@@ -61,7 +62,7 @@ export default function ResetPasswordPage() {
   const strength = getPasswordStrength(password);
 
   useEffect(() => {
-    const token = new URLSearchParams(window.location.search).get("token");
+    const token = parseResetToken(new URLSearchParams(window.location.search).get("token") ?? "");
     if (token) {
       window.setTimeout(() => {
         setCode(token);
@@ -70,20 +71,16 @@ export default function ResetPasswordPage() {
     }
   }, []);
 
-  async function handleVerifyCode(e: React.FormEvent) {
+  function handleVerifyCode(e: React.FormEvent) {
     e.preventDefault();
-    if (!code) return;
-    setLoading(true);
-    setError("");
-
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setStep("password");
-    } catch {
-      setError("Invalid code. Please try again.");
-    } finally {
-      setLoading(false);
+    const token = parseResetToken(code);
+    if (!token) {
+      setError("Paste the full reset link or the 64-character token from your password reset email.");
+      return;
     }
+    setCode(token);
+    setError("");
+    setStep("password");
   }
 
   async function handleResetPassword(e: React.FormEvent) {
@@ -153,9 +150,9 @@ export default function ResetPasswordPage() {
                   <input
                     id="reset-code"
                     type="text"
-                    maxLength={128}
+                    maxLength={2048}
                     className={`form-input${error ? " has-error" : ""}`}
-                    placeholder="Paste reset token from your email"
+                    placeholder="Paste reset link or token from your email"
                     value={code}
                     onChange={(e) => setCode(e.target.value.trim())}
                     style={{ letterSpacing: "0.05em", fontWeight: 600 }}
@@ -285,6 +282,8 @@ export default function ResetPasswordPage() {
 
         {step !== "done" && (
           <p className="auth-nav-text">
+            <Link href="/auth/forgot-password" className="auth-link">Request a new reset link</Link>
+            <br />
             Remember your password?{" "}
             <Link href="/auth/login" className="auth-link">Sign in</Link>
           </p>

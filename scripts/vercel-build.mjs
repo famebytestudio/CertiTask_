@@ -13,13 +13,6 @@ function run(script, args) {
 run("node_modules/prisma/build/index.js", ["generate"]);
 // Preview deployments must never migrate a production database.
 if (production && process.env.DATABASE_URL) {
-  try {
-    const result = spawnSync(process.execPath, ["node_modules/prisma/build/index.js", "migrate", "deploy"], { stdio: "inherit", env: process.env });
-    if (result.status !== 0) {
-      console.warn("Prisma migrate deploy exited with code", result.status, "- continuing build.");
-    }
-  } catch (err) {
-    console.warn("Prisma migrate deploy skipped:", err?.message || err);
-  }
+  run("node_modules/prisma/build/index.js", ["migrate", "deploy"]);
 }
 run("node_modules/next/dist/bin/next", ["build"]);

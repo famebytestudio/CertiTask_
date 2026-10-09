@@ -1,10 +1,11 @@
 "use client";
 
+import { WorkspaceIcon } from "@/components/dashboard/WorkspaceIcon";
+
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Btn,
-  Card,
   EmptyState,
   Notice,
   SectionHeader,
@@ -93,7 +94,7 @@ export function ProjectsTab({
   return (
     <div>
       <SectionHeader
-        icon="🚀"
+        icon={<WorkspaceIcon name="rocket" />}
         title="My Projects"
         subtitle="Manage your posted projects, review candidate application counts, pause or resume listings, and track deliverables."
         action={
@@ -135,7 +136,7 @@ export function ProjectsTab({
                   pointerEvents: "none",
                 }}
               >
-                🔍
+                <WorkspaceIcon name="projects" />
               </span>
               <input
                 id="client-proj-search"
@@ -184,7 +185,7 @@ export function ProjectsTab({
       {/* Projects List or Empty State */}
       {projects.length === 0 ? (
         <EmptyState
-          icon="📭"
+          icon={<WorkspaceIcon name="mail" />}
           title="No projects created yet"
           hint="Post your first project challenge to receive pitches from vetted developers and designers."
           action={
@@ -195,7 +196,7 @@ export function ProjectsTab({
         />
       ) : visible.length === 0 ? (
         <EmptyState
-          icon="🔍"
+          icon={<WorkspaceIcon name="projects" />}
           title="No projects match your filter"
           hint="Try resetting your search query or selecting a different status filter."
           action={
@@ -288,7 +289,7 @@ export function ProjectsTab({
                     {p.status === "DRAFT" && (
                       verified ? (
                         <Btn variant="gold" small disabled={busy} onClick={() => setStatus(p.id, "ACTIVE")}>
-                          🚀 Publish
+                          <WorkspaceIcon name="rocket" /> Publish
                         </Btn>
                       ) : (
                         <button
@@ -311,19 +312,19 @@ export function ProjectsTab({
 
                     {(p.status === "ACTIVE" || p.status === "PAUSED" || p.status === "DRAFT") && (
                       <Btn variant="ghost" small disabled={busy} onClick={() => setEditing(p)}>
-                        ✏️ Edit
+                        <WorkspaceIcon name="edit" /> Edit
                       </Btn>
                     )}
 
                     {p.status === "ACTIVE" && (
                       <Btn variant="ghost" small disabled={busy} onClick={() => setStatus(p.id, "PAUSED")}>
-                        ⏸ Pause
+                        <WorkspaceIcon name="pause" /> Pause
                       </Btn>
                     )}
 
                     {p.status === "PAUSED" && (
                       <Btn variant="ghost" small disabled={busy} onClick={() => setStatus(p.id, "ACTIVE")}>
-                        ▶ Resume
+                        <WorkspaceIcon name="play" /> Resume
                       </Btn>
                     )}
 
@@ -355,13 +356,13 @@ export function ProjectsTab({
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                    <span>📅 Due <strong>{formatDate(p.deadline)}</strong></span>
+                    <span><WorkspaceIcon name="calendar" /> Due <strong>{formatDate(p.deadline)}</strong></span>
                     {p.status === "CLOSED" && p.closedAt && <span>· Closed {formatDate(p.closedAt)}</span>}
                     <span>· {p.teamCap > 1 ? `Teams up to ${p.teamCap}` : "Solo applicants"}</span>
                     <span>· Posted {formatDate(p.createdAt)}</span>
                     {features?.analytics && p.status !== "DRAFT" && (
                       <span>
-                        · 👁️ <strong>{p.viewCount ?? 0}</strong> views · <strong>{p._count?.applications ?? 0}</strong> applied
+                        · <WorkspaceIcon name="eye" /> <strong>{p.viewCount ?? 0}</strong> views · <strong>{p._count?.applications ?? 0}</strong> applied
                         {(p.viewCount ?? 0) > 0 ? ` (${Math.round(((p._count?.applications ?? 0) / (p.viewCount ?? 1)) * 100)}% conversion)` : ""}
                       </span>
                     )}

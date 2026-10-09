@@ -1,5 +1,7 @@
 "use client";
 
+import { WorkspaceIcon } from "@/components/dashboard/WorkspaceIcon";
+
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Btn, EmptyState, Notice, SectionHeader, StatusBadge, formatDate } from "@/components/dashboard/ui";
@@ -57,7 +59,7 @@ export function ApplicationsTab({
   return (
     <div>
       <SectionHeader
-        icon="📋"
+        icon={<WorkspaceIcon name="applications" />}
         title="My Applications"
         subtitle="Track the status of all your submitted pitches. Once a client selects your application, you can submit deliverables to earn verified credentials."
         action={
@@ -83,7 +85,7 @@ export function ApplicationsTab({
           {(
             [
               { id: "all", label: "All", count: counts.all },
-              { id: "SELECTED", label: "Selected 🎉", count: counts.SELECTED },
+              { id: "SELECTED", label: "Selected", count: counts.SELECTED },
               { id: "SHORTLISTED", label: "Shortlisted", count: counts.SHORTLISTED },
               { id: "PENDING", label: "Under Review", count: counts.PENDING },
               { id: "REJECTED", label: "Not Selected", count: counts.REJECTED },
@@ -128,7 +130,7 @@ export function ApplicationsTab({
 
       {applications.length === 0 ? (
         <EmptyState
-          icon="📬"
+          icon={<WorkspaceIcon name="mail" />}
           title="No applications submitted yet"
           hint="Browse open projects from clients, pick one that matches your skills, and send a compelling pitch."
           action={
@@ -139,7 +141,7 @@ export function ApplicationsTab({
         />
       ) : visible.length === 0 ? (
         <EmptyState
-          icon="🔍"
+          icon={<WorkspaceIcon name="projects" />}
           title="No applications in this category"
           hint="Try switching to another filter tab."
           action={
@@ -222,7 +224,7 @@ export function ApplicationsTab({
                     }}
                   >
                     <div>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: "#276749" }}>🎉 You were selected for this project!</div>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: "#276749" }}><WorkspaceIcon name="celebrate" /> You were selected for this project!</div>
                       <div style={{ fontSize: 12, color: "#2F855A", marginTop: 2 }}>
                         Build the required deliverables and submit before the deadline to earn your verified certificate.
                       </div>

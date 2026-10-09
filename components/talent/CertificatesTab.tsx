@@ -1,5 +1,7 @@
 "use client";
 
+import { WorkspaceIcon } from "@/components/dashboard/WorkspaceIcon";
+
 import Link from "next/link";
 import { EmptyState, SectionHeader } from "@/components/dashboard/ui";
 import { CertificateGrid } from "@/components/client/CertificatesTab";
@@ -20,7 +22,7 @@ export function CertificatesTab({
   return (
     <div>
       <SectionHeader
-        icon="🏅"
+        icon={<WorkspaceIcon name="certificates" />}
         title="My Certificates"
         subtitle="Permanent, tamper-proof credentials for completed client projects. Every certificate has a unique verification ID that anyone can verify online."
         action={
@@ -43,7 +45,7 @@ export function CertificatesTab({
                 transition: "all 0.15s",
               }}
             >
-              <span>👤</span> View Public Portfolio ↗
+              <span><WorkspaceIcon name="profile" /></span> View Public Portfolio ↗
             </Link>
           </div>
         }
@@ -64,7 +66,7 @@ export function CertificatesTab({
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
             <div>
               <div style={{ fontSize: 16, fontWeight: 800, color: "#744210", marginBottom: 6, display: "flex", alignItems: "center", gap: 8 }}>
-                <span>🏅</span> {holds.length} Certificate{holds.length > 1 ? "s" : ""} Waiting for Identity Verification
+                <span><WorkspaceIcon name="certificates" /></span> {holds.length} Certificate{holds.length > 1 ? "s" : ""} Waiting for Identity Verification
               </div>
               <p style={{ margin: "0 0 10px", fontSize: 13, color: "#744210", lineHeight: 1.5 }}>
                 Your work was approved by the client! Complete your government ID verification so the certificate can be generated with your legal name.
@@ -100,7 +102,7 @@ export function CertificatesTab({
       {/* Certificates Grid or Empty State */}
       {certificates.length === 0 ? (
         <EmptyState
-          icon="🎓"
+          icon={<WorkspaceIcon name="graduation" />}
           title="No certificates earned yet"
           hint="Apply to projects, deliver quality solutions, and get approved by clients to build your verifiable credential portfolio."
           action={

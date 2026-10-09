@@ -10,31 +10,31 @@ export const dynamic = "force-dynamic";
 
 /** POST /api/auth/verify-email { otp } — validate a 6-digit OTP for the signed-in user. */
 export async function POST(req: Request) {
-  // User must be logged in (session cookie set at signup)
-  const auth = await requireRole("CLIENT", "TALENT");
-  if (auth instanceof NextResponse) return auth;
-
-  // Rate-limit by userId — max 10 attempts per hour
-  if (await isRateLimited(`verify-email-otp:${auth.userId}`, 10, 60 * 60 * 1000)) {
-    return NextResponse.json({ error: "Too many attempts. Wait a while and try again." }, { status: 429 });
-  }
-
-  let otp: unknown;
   try {
-    const body = await req.json();
-    otp = body?.otp;
-  } catch {
-    console.error("[verify-email] Failed to parse request body");
-    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
-  }
+    // User must be logged in (session cookie set at signup)
+    const auth = await requireRole("CLIENT", "TALENT");
+    if (auth instanceof NextResponse) return auth;
 
-  // Must be exactly 6 digits
-  if (typeof otp !== "string" || !/^\d{6}$/.test(otp.trim())) {
-    console.log(`[verify-email] Invalid OTP format: length=${typeof otp === "string" ? otp.length : "non-string"}`);
-    return NextResponse.json({ error: "Enter the 6-digit code from your email." }, { status: 400 });
-  }
+    // Rate-limit by userId — max 10 attempts per hour
+    if (await isRateLimited(`verify-email-otp:${auth.userId}`, 10, 60 * 60 * 1000)) {
+      return NextResponse.json({ error: "Too many attempts. Wait a while and try again." }, { status: 429 });
+    }
 
-  try {
+    let otp: unknown;
+    try {
+      const body = await req.json();
+      otp = body?.otp;
+    } catch {
+      console.error("[verify-email] Failed to parse request body");
+      return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    }
+
+    // Must be exactly 6 digits
+    if (typeof otp !== "string" || !/^\d{6}$/.test(otp.trim())) {
+      console.log(`[verify-email] Invalid OTP format: length=${typeof otp === "string" ? otp.length : "non-string"}`);
+      return NextResponse.json({ error: "Enter the 6-digit code from your email." }, { status: 400 });
+    }
+
     const ok = await confirmEmailOtp(auth.userId, otp.trim());
     if (!ok) {
       const activeToken = await prisma.emailVerificationToken.findFirst({
@@ -54,6 +54,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, role: auth.role.toLowerCase() });
   } catch (err) {
     console.error("[verify-email] EXCEPTION:", err instanceof Error ? err.message : String(err));
-    return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
+    return NextResponse.json({ error: "Email verification is temporarily unavailable. Please try again shortly." }, { status: 503 });
   }
 }

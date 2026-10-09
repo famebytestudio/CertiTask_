@@ -1,5 +1,7 @@
 "use client";
 
+import { WorkspaceIcon } from "@/components/dashboard/WorkspaceIcon";
+
 import { useMemo, useState } from "react";
 import {
   Btn,
@@ -7,7 +9,6 @@ import {
   Notice,
   SectionHeader,
   SkillChips,
-  VerificationBadge,
   inputStyle,
   selectStyle,
   textareaStyle,
@@ -86,7 +87,7 @@ export function PostProjectTab({
   return (
     <div>
       <SectionHeader
-        icon="➕"
+        icon={<WorkspaceIcon name="post" />}
         title="Post a New Project"
         subtitle="Define project requirements, deliverables, and skill sets. Verified talent and teams will submit pitches to collaborate with you."
       />
@@ -142,7 +143,7 @@ export function PostProjectTab({
             }}
           >
             <h3 style={{ fontSize: 15, fontWeight: 800, color: "var(--navy)", margin: "0 0 16px", paddingBottom: 10, borderBottom: "1px solid var(--border)" }}>
-              📋 Project Overview
+              <WorkspaceIcon name="applications" /> Project Overview
             </h3>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -224,7 +225,7 @@ export function PostProjectTab({
             }}
           >
             <h3 style={{ fontSize: 15, fontWeight: 800, color: "var(--navy)", margin: "0 0 16px", paddingBottom: 10, borderBottom: "1px solid var(--border)" }}>
-              🛠️ Skills & Expected Deliverables
+              <WorkspaceIcon name="tools" /> Skills & Expected Deliverables
             </h3>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -314,8 +315,8 @@ export function PostProjectTab({
               {busy
                 ? "Processing…"
                 : verified && !form.draft && (billing?.canPost ?? true)
-                ? "🚀 Publish Project to Marketplace"
-                : "💾 Save Project as Draft"}
+                ? "Publish Project to Marketplace"
+                : "Save Project as Draft"}
             </Btn>
           </div>
 
@@ -325,7 +326,7 @@ export function PostProjectTab({
         {/* Live Talent Preview Card Widget */}
         <div style={{ position: "sticky", top: 96 }}>
           <div style={{ fontSize: 12, fontWeight: 800, color: "var(--ink-subtle)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
-            👁️ Live Talent Card Preview
+            <WorkspaceIcon name="eye" /> Live Talent Card Preview
           </div>
 
           <div
@@ -353,7 +354,7 @@ export function PostProjectTab({
               </span>
 
               <span style={{ fontSize: 11, color: "var(--ink-subtle)" }}>
-                📅 {form.deadline ? `Due ${form.deadline}` : "No deadline set"}
+                <WorkspaceIcon name="calendar" /> {form.deadline ? `Due ${form.deadline}` : "No deadline set"}
               </span>
             </div>
 
@@ -362,7 +363,7 @@ export function PostProjectTab({
             </h4>
 
             <div style={{ fontSize: 13, color: "var(--navy)", fontWeight: 700, marginBottom: 10 }}>
-              🏢 {clientName}
+              <WorkspaceIcon name="building" /> {clientName}
             </div>
 
             <p style={{ fontSize: 13, color: "var(--ink-muted)", margin: "0 0 14px", lineHeight: 1.5 }}>
@@ -390,7 +391,7 @@ export function PostProjectTab({
                 color: "var(--ink-subtle)",
               }}
             >
-              <span>👥 {form.teamCap > 1 ? `Teams up to ${form.teamCap}` : "Solo applicants"}</span>
+              <span><WorkspaceIcon name="teams" /> {form.teamCap > 1 ? `Teams up to ${form.teamCap}` : "Solo applicants"}</span>
               <span style={{ fontWeight: 700, color: "var(--navy)" }}>Apply Now →</span>
             </div>
           </div>

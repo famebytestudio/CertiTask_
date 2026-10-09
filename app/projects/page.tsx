@@ -1,5 +1,7 @@
 "use client";
 
+import { WorkspaceIcon } from "@/components/dashboard/WorkspaceIcon";
+
 import { PageIntro } from "@/components/PageIntro";
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -125,7 +127,7 @@ export default function ProjectsPage() {
                       </div>
                       <div className="space-y-4 pt-4 border-t border-navy/5 mt-6">
                         <div className="flex justify-between items-center text-xs text-ink/75">
-                          <span className={d <= 3 ? "text-red-700 font-bold" : ""}>📅 {fmt(p.deadline)} · {d} day{d !== 1 ? "s" : ""} left</span>
+                          <span className={d <= 3 ? "text-red-700 font-bold" : ""}><WorkspaceIcon name="calendar" /> {fmt(p.deadline)} · {d} day{d !== 1 ? "s" : ""} left</span>
                           <span className="font-semibold text-gold">{p.teamCap > 1 ? `Teams up to ${p.teamCap}` : "Individuals"}</span>
                         </div>
                         <Link href={`/projects/${p.id}`} className="w-full py-2.5 rounded-lg bg-navy text-paper text-xs font-bold hover:bg-navy-dark transition-all duration-300 cursor-pointer text-center border border-navy inline-block">

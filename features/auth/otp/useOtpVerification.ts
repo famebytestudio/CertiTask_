@@ -51,6 +51,16 @@ export function useOtpVerification(onSuccess?: () => void) {
         return { success: false, message: result.error || "This code has expired." };
       }
 
+      // Infrastructure and session failures are not incorrect OTP guesses.
+      if (response.status !== 400) {
+        const error = response.status === 401
+          ? "Your session has ended. Sign in again to verify your email."
+          : result.error || "Verification is temporarily unavailable. Please try again.";
+        setStatus("error");
+        setMessage(error);
+        return { success: false, message: error };
+      }
+
       const nextAttempts = attempts + 1;
       setAttempts(nextAttempts);
       if (nextAttempts >= 5) {

@@ -1,3 +1,5 @@
+
+import { WorkspaceIcon } from "@/components/dashboard/WorkspaceIcon";
 import Link from "next/link";
 import { background } from "@/lib/background";
 import { notFound } from "next/navigation";
@@ -88,7 +90,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               <div className="pt-2">{cta}</div>
             </div>
             <div className="bg-[#FFFDF5] rounded-xl border border-gold/30 p-6 text-sm text-ink/80">
-              <div className="font-bold text-navy mb-1">🏅 What you earn</div>
+              <div className="font-bold text-navy mb-1"><WorkspaceIcon name="certificates" /> What you earn</div>
               A verifiable certificate in your name, listing this project, the client and the skills above. Recruiters can check it at <span className="font-mono">/verify</span> without an account.
             </div>
           </aside>

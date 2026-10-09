@@ -1,5 +1,7 @@
 "use client";
 
+import { WorkspaceIcon } from "@/components/dashboard/WorkspaceIcon";
+
 import { useState } from "react";
 import Link from "next/link";
 import { ProfilePhoto } from "@/components/dashboard/ProfilePhoto";
@@ -83,7 +85,7 @@ export function ProfileTab({ profile, onSaved }: { profile: ProfileDto; onSaved:
     onSaved();
   }
 
-  const section = (icon: string, title: string, subtitle: string, children: React.ReactNode) => (
+  const section = (icon: React.ReactNode, title: string, subtitle: string, children: React.ReactNode) => (
     <div
       style={{
         background: "#fff",
@@ -110,7 +112,7 @@ export function ProfileTab({ profile, onSaved }: { profile: ProfileDto; onSaved:
   return (
     <div>
       <SectionHeader
-        icon="✏️"
+        icon={<WorkspaceIcon name="edit" />}
         title="Edit Organization Profile"
         subtitle={`Registered as ${profile.clientType ? CLIENT_TYPE_LABEL[profile.clientType] : "Client"}. Talent sees this profile when viewing your project challenges.`}
         action={
@@ -131,7 +133,7 @@ export function ProfileTab({ profile, onSaved }: { profile: ProfileDto; onSaved:
               gap: 6,
             }}
           >
-            <span>🏢</span> View Public Client Page ↗
+            <span><WorkspaceIcon name="building" /></span> View Public Client Page ↗
           </Link>
         }
       />
@@ -152,7 +154,7 @@ export function ProfileTab({ profile, onSaved }: { profile: ProfileDto; onSaved:
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontSize: 22 }}>🪪</span>
+          <span style={{ fontSize: 22 }}><WorkspaceIcon name="verification" /></span>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{ fontSize: 14, fontWeight: 800, color: "var(--navy)" }}>
@@ -181,7 +183,7 @@ export function ProfileTab({ profile, onSaved }: { profile: ProfileDto; onSaved:
         }}
       >
         <div style={{ fontSize: 16, fontWeight: 800, color: "var(--navy)", marginBottom: 4 }}>
-          📸 {isOrg ? "Organization Logo" : "Profile Picture"}
+          <WorkspaceIcon name="camera" /> {isOrg ? "Organization Logo" : "Profile Picture"}
         </div>
         <div style={{ fontSize: 12, color: "var(--ink-muted)", marginBottom: 16 }}>
           Upload a high-resolution logo or picture displayed on project listings and certificates.
@@ -192,7 +194,7 @@ export function ProfileTab({ profile, onSaved }: { profile: ProfileDto; onSaved:
       <form onSubmit={save}>
         {/* Organization / Personal Info */}
         {section(
-          isOrg ? "🏢" : "👤",
+          isOrg ? <WorkspaceIcon name="building" /> : <WorkspaceIcon name="profile" />,
           isOrg ? "Organization Details" : "Account Information",
           "Public company information and industry categorization.",
           <>
@@ -260,7 +262,7 @@ export function ProfileTab({ profile, onSaved }: { profile: ProfileDto; onSaved:
 
         {/* Contact & Links */}
         {section(
-          "🌐",
+          <WorkspaceIcon name="globe" />,
           "Contact & Online Presence",
           "Where candidates can learn more about your brand and verify credibility.",
           <>
@@ -300,7 +302,7 @@ export function ProfileTab({ profile, onSaved }: { profile: ProfileDto; onSaved:
 
         {/* About & Mission */}
         {section(
-          "📝",
+          <WorkspaceIcon name="edit" />,
           isOrg ? "About the Organization" : "Introduction",
           "Share your mission, products, and what kind of talent challenges you post.",
           <>

@@ -86,7 +86,7 @@ export function Btn({ variant = "primary", small, style, disabled, ...rest }: Re
 }
 
 /* ── Section header ── */
-export function SectionHeader({ icon, title, subtitle, action }: { icon: string; title: string; subtitle: string; action?: ReactNode }) {
+export function SectionHeader({ icon, title, subtitle, action }: { icon: ReactNode; title: string; subtitle: string; action?: ReactNode }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
       <div>
@@ -99,7 +99,7 @@ export function SectionHeader({ icon, title, subtitle, action }: { icon: string;
 }
 
 /* ── Empty state ── */
-export function EmptyState({ icon, title, hint, action }: { icon: string; title: string; hint?: string; action?: ReactNode }) {
+export function EmptyState({ icon, title, hint, action }: { icon: ReactNode; title: string; hint?: string; action?: ReactNode }) {
   return (
     <div className="workspace-empty" style={{ textAlign: "center", padding: "60px 0", color: "var(--ink-subtle)" }}>
       <div style={{ fontSize: 48, marginBottom: 12 }}>{icon}</div>

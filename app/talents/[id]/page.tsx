@@ -1,5 +1,7 @@
 "use client";
 
+import { WorkspaceIcon } from "@/components/dashboard/WorkspaceIcon";
+
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -142,8 +144,8 @@ export default function TalentDetailPage() {
               <div className="bg-white rounded-xl border border-navy/5 p-6">
                 <h3 className="font-bold text-navy mb-4">Links</h3>
                 <div className="space-y-3 text-sm">
-                  {talent.portfolioUrl && <a href={talent.portfolioUrl} target="_blank" rel="noopener noreferrer" className="block text-gold hover:underline break-all">🌐 Portfolio</a>}
-                  {talent.linkedinUrl && <a href={talent.linkedinUrl} target="_blank" rel="noopener noreferrer" className="block text-gold hover:underline">💼 LinkedIn</a>}
+                  {talent.portfolioUrl && <a href={talent.portfolioUrl} target="_blank" rel="noopener noreferrer" className="block text-gold hover:underline break-all"><WorkspaceIcon name="globe" /> Portfolio</a>}
+                  {talent.linkedinUrl && <a href={talent.linkedinUrl} target="_blank" rel="noopener noreferrer" className="block text-gold hover:underline"><WorkspaceIcon name="briefcase" /> LinkedIn</a>}
                   {talent.resumeUrl && <a href={talent.resumeUrl} target="_blank" rel="noopener noreferrer" className="block text-gold hover:underline">View resume / CV</a>}
                   {!talent.portfolioUrl && !talent.linkedinUrl && !talent.resumeUrl && <p className="text-ink/60">No links added.</p>}
                 </div>

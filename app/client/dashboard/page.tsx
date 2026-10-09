@@ -1,5 +1,7 @@
 "use client";
 
+import { WorkspaceIcon } from "@/components/dashboard/WorkspaceIcon";
+
 import { Suspense } from "react";
 import Link from "next/link";
 import {
@@ -49,21 +51,21 @@ function ClientDashboard() {
   const activeProjects = projects.filter(p => p.status === "ACTIVE").length;
 
   const tabs: TabDef<ClientTab>[] = [
-    { id: "overview", label: "Overview", icon: "🏠" },
-    { id: "post-project", label: "Post a Project", icon: "➕" },
-    { id: "projects", label: "My Projects", icon: "🚀", badge: activeProjects },
-    { id: "applications", label: "Applications", icon: "📋", badge: pendingApps },
-    { id: "submissions", label: "Review Submissions", icon: "📤", badge: reviewQueue, badgeColor: "#E53E3E" },
-    { id: "certificates", label: "Issued Certificates", icon: "🏅", badge: certificates.length > 0 ? certificates.length : undefined },
+    { id: "overview", label: "Overview", icon: <WorkspaceIcon name="overview" /> },
+    { id: "post-project", label: "Post a Project", icon: <WorkspaceIcon name="post" /> },
+    { id: "projects", label: "My Projects", icon: <WorkspaceIcon name="rocket" />, badge: activeProjects },
+    { id: "applications", label: "Applications", icon: <WorkspaceIcon name="applications" />, badge: pendingApps },
+    { id: "submissions", label: "Review Submissions", icon: <WorkspaceIcon name="submissions" />, badge: reviewQueue, badgeColor: "#E53E3E" },
+    { id: "certificates", label: "Issued Certificates", icon: <WorkspaceIcon name="certificates" />, badge: certificates.length > 0 ? certificates.length : undefined },
     {
       id: "verification",
       label: "Verification",
-      icon: "🪪",
+      icon: <WorkspaceIcon name="verification" />,
       badge: profile.verificationStatus === "VERIFIED" ? 0 : 1,
       badgeColor: profile.verificationStatus === "PENDING_REVIEW" ? "#97640E" : "#E53E3E",
     },
-    { id: "billing", label: "Billing & Plan", icon: "💳" },
-    { id: "profile", label: "Edit Profile", icon: "✏️" },
+    { id: "billing", label: "Billing & Plan", icon: <WorkspaceIcon name="billing" /> },
+    { id: "profile", label: "Edit Profile", icon: <WorkspaceIcon name="edit" /> },
   ];
 
   const tabGroups: TabGroup<ClientTab>[] = [
@@ -114,7 +116,7 @@ function ClientDashboard() {
                 boxShadow: "0 0 8px #3182CE",
               }}
             />
-            💼 Client Hub
+            <WorkspaceIcon name="briefcase" /> Client Hub
           </span>
         </div>
       }
@@ -152,7 +154,7 @@ function ClientDashboard() {
               transition: "transform 0.15s",
             }}
           >
-            <span>➕</span> Post Project
+            <span><WorkspaceIcon name="post" /></span> Post Project
           </button>
           <Link
             href={`/clients/${profile.id}`}
@@ -172,7 +174,7 @@ function ClientDashboard() {
               transition: "background 0.15s",
             }}
           >
-            <span>🏢</span> Client Page ↗
+            <span><WorkspaceIcon name="building" /></span> Client Page ↗
           </Link>
         </>
       }

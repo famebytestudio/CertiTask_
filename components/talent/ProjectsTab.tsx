@@ -1,11 +1,12 @@
 "use client";
 
+import { WorkspaceIcon } from "@/components/dashboard/WorkspaceIcon";
+
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   Btn,
-  Card,
   EmptyState,
   Field,
   Modal,
@@ -140,7 +141,7 @@ export function ProjectsTab({
   return (
     <div>
       <SectionHeader
-        icon="🔎"
+        icon={<WorkspaceIcon name="projects" />}
         title="Find Projects"
         subtitle="Explore real-world client projects. Apply as an individual or form a team to collaborate and earn verified certificates."
         action={
@@ -177,7 +178,7 @@ export function ProjectsTab({
                 pointerEvents: "none",
               }}
             >
-              🔍
+              <WorkspaceIcon name="projects" />
             </span>
             <input
               id="proj-search"
@@ -214,9 +215,9 @@ export function ProjectsTab({
           {(
             [
               { id: "all", label: "All Projects" },
-              { id: "teams", label: "👥 Team Projects" },
-              { id: "solo", label: "👤 Solo Only" },
-              { id: "urgent", label: "⏳ Closing Soon (≤3d)" },
+              { id: "teams", label: "Team Projects" },
+              { id: "solo", label: "Solo Only" },
+              { id: "urgent", label: "Closing Soon (≤3d)" },
             ] as const
           ).map(f => (
             <button
@@ -263,7 +264,7 @@ export function ProjectsTab({
 
       {visible.length === 0 ? (
         <EmptyState
-          icon="📭"
+          icon={<WorkspaceIcon name="mail" />}
           title={projects.length === 0 ? "No open projects right now" : "No projects match your search criteria"}
           hint={
             projects.length === 0
@@ -350,7 +351,7 @@ export function ProjectsTab({
                     {p.client && (
                       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                         <Link href={`/clients/${p.client.id}`} style={{ fontSize: 13, fontWeight: 700, color: "var(--navy)", textDecoration: "none" }}>
-                          🏢 {p.client.name}
+                          <WorkspaceIcon name="building" /> {p.client.name}
                         </Link>
                         {p.client.clientType && (
                           <span style={{ fontSize: 11, color: "var(--ink-subtle)", background: "#EDF2F7", padding: "1px 6px", borderRadius: 4 }}>
@@ -376,7 +377,7 @@ export function ProjectsTab({
                       whiteSpace: "nowrap",
                     }}
                   >
-                    <span>📅</span>
+                    <span><WorkspaceIcon name="calendar" /></span>
                     <span>
                       {isClosed ? "Deadline passed" : `Due ${formatDate(p.deadline)} (${days} day${days !== 1 ? "s" : ""} left)`}
                     </span>
@@ -405,7 +406,7 @@ export function ProjectsTab({
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 12, color: "var(--ink-subtle)", flexWrap: "wrap" }}>
                     <span style={{ display: "flex", alignItems: "center", gap: 4, fontWeight: 600 }}>
-                      <span>👥</span> {p.teamCap > 1 ? `Teams of up to ${p.teamCap}` : "Individual applicants only"}
+                      <span><WorkspaceIcon name="teams" /></span> {p.teamCap > 1 ? `Teams of up to ${p.teamCap}` : "Individual applicants only"}
                     </span>
                     <span>•</span>
                     <span>{p._count?.applications ?? 0} applied</span>
@@ -434,7 +435,7 @@ export function ProjectsTab({
                       </Btn>
                     ) : app?.status === "SELECTED" ? (
                       <Btn variant="success" onClick={() => goTo("submissions")}>
-                        📤 Submit Deliverables
+                        <WorkspaceIcon name="submissions" /> Submit Deliverables
                       </Btn>
                     ) : app ? (
                       <Btn variant="ghost" disabled>
@@ -446,7 +447,7 @@ export function ProjectsTab({
                       </Btn>
                     ) : teamFor(p.id) ? (
                       <Btn variant="gold" onClick={() => goTo("teams")}>
-                        👥 Continue with Your Team
+                        <WorkspaceIcon name="teams" /> Continue with Your Team
                       </Btn>
                     ) : (
                       <Btn variant="primary" onClick={() => startApply(p)}>
@@ -494,7 +495,7 @@ export function ProjectsTab({
               onMouseLeave={e => (e.currentTarget.style.borderColor = "var(--border)")}
             >
               <div>
-                <div style={{ fontSize: 24, marginBottom: 8 }}>🙋</div>
+                <div style={{ fontSize: 24, marginBottom: 8 }}><WorkspaceIcon name="profile" /></div>
                 <div style={{ fontSize: 16, fontWeight: 800, color: "var(--navy)" }}>Apply Solo</div>
                 <div style={{ fontSize: 12, color: "var(--ink-muted)", marginTop: 4, lineHeight: 1.4 }}>
                   Apply as an individual applicant. Fast, direct submission.
@@ -515,7 +516,7 @@ export function ProjectsTab({
               }}
             >
               <div>
-                <div style={{ fontSize: 24, marginBottom: 8 }}>👥</div>
+                <div style={{ fontSize: 24, marginBottom: 8 }}><WorkspaceIcon name="teams" /></div>
                 <div style={{ fontSize: 16, fontWeight: 800, color: "var(--navy)" }}>Build a Team</div>
                 <div style={{ fontSize: 12, color: "var(--ink-muted)", margin: "4px 0 12px", lineHeight: 1.4 }}>
                   Create your team workspace, invite collaborators via email, and apply together.

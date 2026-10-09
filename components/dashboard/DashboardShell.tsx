@@ -9,7 +9,7 @@ import { WorkspaceIcon } from "@/components/dashboard/WorkspaceIcon";
 export interface TabDef<T extends string> {
   id: T;
   label: string;
-  icon: string;
+  icon: React.ReactNode;
   badge?: number;
   badgeColor?: string;
   category?: string;
@@ -154,7 +154,7 @@ export function DashboardShell<T extends string>({
                 justifyContent: "center",
               }}
             >
-              <span aria-hidden="true">☰</span>
+              <WorkspaceIcon name="menu" />
             </button>
 
             <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 8 }}>
@@ -240,7 +240,7 @@ export function DashboardShell<T extends string>({
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 13, color: "var(--gold-light)" }}>🔍</span>
+                <span style={{ fontSize: 13, color: "var(--gold-light)" }}><WorkspaceIcon name="projects" /></span>
                 <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {searchPlaceholder}
                 </span>
@@ -273,6 +273,9 @@ export function DashboardShell<T extends string>({
             {/* User Profile Trigger Button */}
             <div style={{ position: "relative" }}>
               <button
+                type="button"
+                aria-label="Account menu"
+                aria-expanded={userDropdownOpen}
                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                 style={{
                   background: "rgba(255,255,255,0.08)",
@@ -372,7 +375,7 @@ export function DashboardShell<T extends string>({
                     onMouseEnter={e => (e.currentTarget.style.background = "#F8FAFC")}
                     onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                   >
-                    <span>✏️</span> Edit Profile
+                    <span><WorkspaceIcon name="edit" /></span> Edit Profile
                   </button>
 
                   <button
@@ -398,7 +401,7 @@ export function DashboardShell<T extends string>({
                     onMouseEnter={e => (e.currentTarget.style.background = "#F8FAFC")}
                     onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                   >
-                    <span>🪪</span> Verification
+                    <span><WorkspaceIcon name="verification" /></span> Verification
                   </button>
 
                   <div style={{ borderTop: "1px solid var(--border)", marginTop: 6, paddingTop: 6 }}>
@@ -425,7 +428,7 @@ export function DashboardShell<T extends string>({
                       onMouseEnter={e => (e.currentTarget.style.background = "rgba(229,62,62,0.06)")}
                       onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                     >
-                      <span>🚪</span> Sign Out
+                      <span><WorkspaceIcon name="logout" /></span> Sign Out
                     </button>
                   </div>
                 </div>
@@ -468,7 +471,7 @@ export function DashboardShell<T extends string>({
             onClick={() => setMobileNavOpen(false)}
             aria-label="Close navigation"
           >
-            <span aria-hidden="true">✕</span>
+            <WorkspaceIcon name="close" />
           </button>
 
           <nav
@@ -769,7 +772,7 @@ export function DashboardShell<T extends string>({
                   cursor: "pointer",
                 }}
               >
-                Sign Out
+                <WorkspaceIcon name="logout" /> Sign Out
               </button>
             </div>
           </nav>
@@ -961,7 +964,7 @@ export function LoadingScreen({ text }: { text: string }) {
             />
           </div>
         ) : (
-          <div style={{ fontSize: 32 }}>⚠️</div>
+          <div style={{ fontSize: 32 }}><WorkspaceIcon name="warning" /></div>
         )}
 
         {/* Text */}
@@ -986,7 +989,7 @@ export function LoadingScreen({ text }: { text: string }) {
 export function StatTiles({
   tiles,
 }: {
-  tiles: { label: string; value: number; icon: string; color: string; bg: string }[];
+  tiles: { label: string; value: number; icon: React.ReactNode; color: string; bg: string }[];
 }) {
   return (
     <div
