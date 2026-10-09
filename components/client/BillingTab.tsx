@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Btn, Notice, SectionHeader, StatusBadge, daysUntil, formatDate } from "@/components/dashboard/ui";
 import { api } from "@/components/dashboard/useDashboardData";
 import { PlanCards, type PlanCatalogItem } from "@/components/billing/PlanCards";
@@ -14,12 +15,13 @@ interface Data { entitlement: Entitlement; subscriptions: Sub[]; payments: Pay[]
 const usd = (c: number) => `$${(c / 100).toFixed(c % 100 === 0 ? 0 : 2)}`;
 
 /** Open the new in-app checkout flow before redirecting to Safepay. */
-export async function goToCheckout(tier: PlanTier): Promise<string | null> {
-  window.location.assign(`/checkout?plan=${tier}`);
+export async function goToCheckout(tier: PlanTier, navigate: (url: string) => void): Promise<string | null> {
+  navigate(`/checkout?plan=${tier}`);
   return null;
 }
 
 export function BillingTab({ onChanged, audience = "client" }: { onChanged: () => void; audience?: "client" | "talent" }) {
+  const router = useRouter();
   const [data, setData] = useState<Data | null>(null);
   const [busy, setBusy] = useState<PlanTier | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +40,7 @@ export function BillingTab({ onChanged, audience = "client" }: { onChanged: () =
 
   async function choose(tier: PlanTier) {
     setBusy(tier); setError(null);
-    const err = await goToCheckout(tier);
+    const err = await goToCheckout(tier, router.push);
     if (err) { setError(err); setBusy(null); }
   }
   async function cancel() {

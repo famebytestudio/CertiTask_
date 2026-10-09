@@ -13,6 +13,8 @@ export async function proxy(req: NextRequest) {
 
   if (
     pathname.startsWith("/api/") &&
+    // Server-to-server requests are authenticated by the webhook's HMAC check.
+    pathname !== "/api/safepay/webhook" &&
     ["POST", "PUT", "PATCH", "DELETE"].includes(req.method) &&
     !isSameOrigin(req)
   ) {
@@ -49,7 +51,9 @@ export async function proxy(req: NextRequest) {
       return response;
     }
     if (isClientRoute || isTalentRoute) {
-      const response = NextResponse.redirect(new URL("/auth/login", req.url));
+      const loginUrl = new URL("/auth/login", req.url);
+      loginUrl.searchParams.set("next", pathname + req.nextUrl.search);
+      const response = NextResponse.redirect(loginUrl);
       response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
       return response;
     }
@@ -94,6 +98,9 @@ export async function proxy(req: NextRequest) {
 
   /* 4. Attach no-store anti-caching headers to prevent back-button caching of protected pages */
   const response = NextResponse.next();
+  if (pathname.startsWith("/api/")) {
+    response.headers.set("Cache-Control", "private, no-store");
+  }
   if (isClientRoute || isTalentRoute || isAdminRoute) {
     response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
     response.headers.set("Pragma", "no-cache");

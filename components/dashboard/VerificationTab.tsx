@@ -6,6 +6,7 @@ import { Btn, Field, Notice, SectionHeader, VerificationBadge, inputStyle, selec
 import { api } from "@/components/dashboard/useDashboardData";
 import { ID_TYPES, ID_TYPE_LABEL, type IdType } from "@/lib/verification";
 import type { ProfileDto } from "@/lib/types";
+import { DOCUMENT_SIZE_LABEL, MAX_DOCUMENT_BYTES } from "@/lib/upload-limits";
 
 interface DocMeta { id: string; type: string; mimeType: string; sizeBytes: number; createdAt: string }
 interface VerificationRequestDto {
@@ -27,13 +28,17 @@ function DocumentUpload({ slot, label, hint, doc, onChange, disabled }: { slot: 
   const [error, setError] = useState<string | null>(null);
 
   async function upload(file: File) {
+    if (file.size === 0 || file.size > MAX_DOCUMENT_BYTES) {
+      setError(`Choose a non-empty file up to ${DOCUMENT_SIZE_LABEL}.`);
+      return;
+    }
     setBusy(true); setError(null);
     const fd = new FormData();
     fd.append("file", file);
     fd.append("type", SLOT_TYPE[slot]);
     try {
       const res = await fetch("/api/verification/documents", { method: "POST", body: fd });
-      const json = await res.json();
+      const json = await res.json().catch(() => ({ error: res.status === 413 ? `Choose a file up to ${DOCUMENT_SIZE_LABEL}.` : "Upload failed. Please try again." }));
       if (!res.ok) { setError(json.error ?? "Upload failed"); return; }
       onChange(json.document as DocMeta);
     } catch { setError("Network error"); }
@@ -41,8 +46,11 @@ function DocumentUpload({ slot, label, hint, doc, onChange, disabled }: { slot: 
   }
   async function remove() {
     if (!doc) return;
-    await api(`/api/verification/documents/${doc.id}`, "DELETE");
-    onChange(null);
+    setBusy(true); setError(null);
+    const result = await api(`/api/verification/documents/${doc.id}`, "DELETE");
+    if (result.ok) onChange(null);
+    else setError(result.error ?? "Could not remove the file");
+    setBusy(false);
   }
 
   return (
@@ -54,7 +62,7 @@ function DocumentUpload({ slot, label, hint, doc, onChange, disabled }: { slot: 
           <span style={{ fontSize: 12, color: "var(--success)", fontWeight: 700 }}>✓ Uploaded</span>
           <a href={`/api/verification/documents/${doc.id}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "var(--navy)", fontWeight: 600 }}>Preview</a>
           <span style={{ fontSize: 11, color: "var(--ink-subtle)" }}>{doc.sizeBytes < 1024 ? "<1" : Math.round(doc.sizeBytes / 1024)} KB · {doc.mimeType.split("/")[1].toUpperCase()}</span>
-          {!disabled && <button type="button" onClick={remove} style={{ fontSize: 11, color: "#9B2C2C", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>Remove</button>}
+          {!disabled && <button type="button" disabled={busy} onClick={remove} style={{ fontSize: 11, color: "#9B2C2C", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>Remove</button>}
         </div>
       ) : (
         <label style={{ display: "inline-block", padding: "8px 14px", background: "var(--navy)", color: "#fff", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: busy || disabled ? "not-allowed" : "pointer", opacity: busy || disabled ? 0.6 : 1 }}>
@@ -176,7 +184,7 @@ export function VerificationTab({ profile, onChanged }: { profile: ProfileDto; o
                 <Field label="Registration / NTN / SECP number" required>
                   <input id="v-reg" value={form.registrationNumber} onChange={e => setForm({ ...form, registrationNumber: e.target.value })} style={inputStyle()} required maxLength={60} />
                 </Field>
-                <DocumentUpload slot="orgRegistration" label="Registration proof" hint="SECP certificate of incorporation, NTN certificate or business registration. PDF or photo, max 5 MB." doc={docs.orgRegistration} onChange={d => setDocs({ ...docs, orgRegistration: d })} />
+                <DocumentUpload slot="orgRegistration" label="Registration proof" hint="SECP certificate of incorporation, NTN certificate or business registration. PDF or photo, max 4 MB." doc={docs.orgRegistration} onChange={d => setDocs({ ...docs, orgRegistration: d })} />
                 <div style={{ borderTop: "1px solid var(--border)", paddingTop: 16, fontSize: 13, fontWeight: 700, color: "var(--navy)" }}>Authorized person (you)</div>
                 <Field label="Your full legal name" required hint="As on your ID. You are accountable for approvals made from this account.">
                   <input id="v-auth-name" value={form.authorizedPersonName} onChange={e => setForm({ ...form, authorizedPersonName: e.target.value })} style={inputStyle()} required maxLength={150} />
@@ -198,7 +206,7 @@ export function VerificationTab({ profile, onChanged }: { profile: ProfileDto; o
               </Field>
             </div>
             <div className="mobile-dashboard-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-              <DocumentUpload slot="idFront" label="ID — front" hint="Clear photo or scan. All four corners visible. Max 5 MB." doc={docs.idFront} onChange={d => setDocs({ ...docs, idFront: d })} />
+              <DocumentUpload slot="idFront" label="ID — front" hint="Clear photo or scan. All four corners visible. Max 4 MB." doc={docs.idFront} onChange={d => setDocs({ ...docs, idFront: d })} />
               <DocumentUpload slot="idBack" label="ID — back" hint="For a passport, upload the data page again." doc={docs.idBack} onChange={d => setDocs({ ...docs, idBack: d })} />
             </div>
           </div>

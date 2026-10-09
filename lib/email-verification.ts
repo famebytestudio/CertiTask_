@@ -26,7 +26,6 @@ export async function sendEmailVerification(user: { id: string; email: string; n
   const otp = generateOtp();
   const tokenHash = hashOtp(user.id, otp);
 
-  console.log(`[send-otp] Creating OTP for userId=${user.id} email=${user.email} hash_prefix=${tokenHash.slice(0, 8)}`);
 
   // Invalidate any previous unused tokens for this user so only one OTP is valid at a time
   await prisma.emailVerificationToken.deleteMany({ where: { userId: user.id, usedAt: null } }).catch(() => {});
@@ -42,7 +41,7 @@ export async function sendEmailVerification(user: { id: string; email: string; n
 
   try {
     await sendVerifyEmailOtp(user.email, user.name, otp);
-    console.log(`[send-otp] OTP email sent successfully to ${user.email}`);
+
   } catch (err) {
     console.error("[send-otp] OTP email delivery failed:", err);
     // Roll back the token we just created so user can request a fresh one
@@ -63,7 +62,6 @@ export async function confirmEmailOtp(userId: string, rawOtp: string): Promise<b
   const tokenHash = hashOtp(userId, cleanOtp);
   const now = new Date();
 
-  console.log(`[verify-otp] userId=${userId} cleanOtp=${cleanOtp} hash_prefix=${tokenHash.slice(0, 8)}... now=${now.toISOString()}`);
 
   return prisma.$transaction(async (tx) => {
     const t = await tx.emailVerificationToken.findFirst({
@@ -72,27 +70,16 @@ export async function confirmEmailOtp(userId: string, rawOtp: string): Promise<b
     });
 
     if (!t) {
-      // Diagnostic: check if token exists by hash
-      const any = await tx.emailVerificationToken.findFirst({
-        where: { tokenHash },
-        select: { userId: true, usedAt: true, expiresAt: true },
-      });
-      if (any) {
-        console.log(`[verify-otp] Token found but invalid: userIdMatch=${any.userId === userId} usedAt=${any.usedAt?.toISOString() ?? "null"} expiresAt=${any.expiresAt.toISOString()} expired=${any.expiresAt <= now}`);
-      } else {
-        console.log(`[verify-otp] Token NOT found in DB for hash_prefix=${tokenHash.slice(0, 8)}`);
-      }
       return false;
     }
 
-    console.log(`[verify-otp] Token matched, id=${t.id} expiresAt=${t.expiresAt.toISOString()}`);
 
     const claimed = await tx.emailVerificationToken.updateMany({
       where: { id: t.id, usedAt: null },
       data: { usedAt: new Date() },
     });
     if (claimed.count !== 1) {
-      console.log(`[verify-otp] Race condition: token already claimed`);
+
       return false;
     }
 

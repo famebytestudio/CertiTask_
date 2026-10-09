@@ -3,29 +3,58 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Btn, Card, EmptyState, Field, Modal, Notice, SectionHeader, SkillChips, VerificationBadge, daysUntil, formatDate, inputStyle, selectStyle, textareaStyle } from "@/components/dashboard/ui";
+import {
+  Btn,
+  Card,
+  EmptyState,
+  Field,
+  Modal,
+  Notice,
+  SectionHeader,
+  SkillChips,
+  VerificationBadge,
+  daysUntil,
+  formatDate,
+  inputStyle,
+  selectStyle,
+  textareaStyle,
+} from "@/components/dashboard/ui";
 import { api } from "@/components/dashboard/useDashboardData";
 import { PROJECT_CATEGORIES, PROJECT_CATEGORY_LABEL, CLIENT_TYPE_LABEL } from "@/lib/enums";
 import type { ApplicationDto, ProjectDto, SubmissionDto, TeamFullDto } from "@/lib/types";
 import type { TalentTab } from "@/app/talent/dashboard/page";
 import { PlanRequiredModal } from "@/components/client/PlanRequiredModal";
 
-export function ProjectsTab({ projects, applications, submissions, teams, onChanged, goTo }: {
-  projects: ProjectDto[]; applications: ApplicationDto[]; submissions: SubmissionDto[]; teams: TeamFullDto[]; onChanged: () => void; goTo: (t: TalentTab) => void;
+export function ProjectsTab({
+  projects,
+  applications,
+  submissions,
+  teams,
+  onChanged,
+  goTo,
+}: {
+  projects: ProjectDto[];
+  applications: ApplicationDto[];
+  submissions: SubmissionDto[];
+  teams: TeamFullDto[];
+  onChanged: () => void;
+  goTo: (t: TalentTab) => void;
 }) {
   const params = useSearchParams();
-  // Deep link from the public project page: /talent/dashboard?tab=projects&apply=<projectId>
   const applyParam = params.get("apply");
   const [choice, setChoice] = useState<ProjectDto | null>(() => {
     if (!applyParam) return null;
     const p = projects.find(x => x.id === applyParam);
-    const taken = applications.some(a => a.projectId === applyParam && a.status !== "WITHDRAWN") || teams.some(t => t.projectId === applyParam && !t.application);
+    const taken =
+      applications.some(a => a.projectId === applyParam && a.status !== "WITHDRAWN") ||
+      teams.some(t => t.projectId === applyParam && !t.application);
     return p && !taken ? p : null;
   });
   const [teamName, setTeamName] = useState("");
   const [creating, setCreating] = useState(false);
   const [q, setQ] = useState("");
   const [category, setCategory] = useState("all");
+  const [filterMode, setFilterMode] = useState<"all" | "teams" | "solo" | "urgent">("all");
   const [applying, setApplying] = useState<ProjectDto | null>(null);
   const [form, setForm] = useState({ teamName: "", pitch: "" });
   const [busy, setBusy] = useState(false);
@@ -34,11 +63,24 @@ export function ProjectsTab({ projects, applications, submissions, teams, onChan
 
   const visible = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    return projects.filter(p =>
-      (category === "all" || p.category === category) &&
-      (!needle || p.title.toLowerCase().includes(needle) || p.description.toLowerCase().includes(needle) || p.requiredSkills.some(s => s.toLowerCase().includes(needle)) || p.client?.name.toLowerCase().includes(needle))
-    );
-  }, [projects, q, category]);
+    return projects.filter(p => {
+      const matchCat = category === "all" || p.category === category;
+      const matchSearch =
+        !needle ||
+        p.title.toLowerCase().includes(needle) ||
+        p.description.toLowerCase().includes(needle) ||
+        p.requiredSkills.some(s => s.toLowerCase().includes(needle)) ||
+        p.client?.name.toLowerCase().includes(needle);
+
+      const days = daysUntil(p.deadline);
+      let matchMode = true;
+      if (filterMode === "teams") matchMode = p.teamCap > 1;
+      else if (filterMode === "solo") matchMode = p.teamCap === 1;
+      else if (filterMode === "urgent") matchMode = days >= 0 && days <= 3;
+
+      return matchCat && matchSearch && matchMode;
+    });
+  }, [projects, q, category, filterMode]);
 
   function appFor(projectId: string) {
     return applications.find(a => a.projectId === projectId && a.status !== "WITHDRAWN");
@@ -48,18 +90,28 @@ export function ProjectsTab({ projects, applications, submissions, teams, onChan
   }
 
   function startApply(p: ProjectDto) {
-    if (p.teamCap > 1) { setChoice(p); return; }
-    setApplying(p); setForm({ teamName: "", pitch: "" }); setError(null);
+    if (p.teamCap > 1) {
+      setChoice(p);
+      return;
+    }
+    setApplying(p);
+    setForm({ teamName: "", pitch: "" });
+    setError(null);
   }
 
   async function createTeam(e: React.FormEvent) {
     e.preventDefault();
     if (!choice) return;
-    setCreating(true); setError(null);
+    setCreating(true);
+    setError(null);
     const r = await api("/api/teams", "POST", { projectId: choice.id, name: teamName });
     setCreating(false);
-    if (!r.ok) { setError(r.error ?? "Could not create team"); return; }
-    setChoice(null); setTeamName("");
+    if (!r.ok) {
+      setError(r.error ?? "Could not create team");
+      return;
+    }
+    setChoice(null);
+    setTeamName("");
     onChanged();
     goTo("teams");
   }
@@ -67,89 +119,422 @@ export function ProjectsTab({ projects, applications, submissions, teams, onChan
   async function apply(e: React.FormEvent) {
     e.preventDefault();
     if (!applying) return;
-    setBusy(true); setError(null);
+    setBusy(true);
+    setError(null);
     const res = await api("/api/applications", "POST", { projectId: applying.id, ...form });
     setBusy(false);
-    if (!res.ok) { if (res.code === "PLAN_REQUIRED" || res.code === "LIMIT_REACHED") { setPlanModal(res.code); return; } setError(res.error ?? "Could not apply"); return; }
-    setApplying(null); setForm({ teamName: "", pitch: "" });
+    if (!res.ok) {
+      if (res.code === "PLAN_REQUIRED" || res.code === "LIMIT_REACHED") {
+        setPlanModal(res.code);
+        return;
+      }
+      setError(res.error ?? "Could not apply");
+      return;
+    }
+    setApplying(null);
+    setForm({ teamName: "", pitch: "" });
     onChanged();
     goTo("applications");
   }
 
   return (
     <div>
-      <SectionHeader icon="🔎" title="Find projects" subtitle="Open projects from clients. Apply to the ones that match your skills." />
+      <SectionHeader
+        icon="🔎"
+        title="Find Projects"
+        subtitle="Explore real-world client projects. Apply as an individual or form a team to collaborate and earn verified certificates."
+        action={
+          <div style={{ fontSize: 13, color: "var(--ink-muted)", background: "rgba(15,42,74,0.06)", padding: "6px 14px", borderRadius: 20, fontWeight: 700 }}>
+            {projects.length} Open Project{projects.length !== 1 ? "s" : ""}
+          </div>
+        }
+      />
 
-      <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
-        <input id="proj-search" value={q} onChange={e => setQ(e.target.value)} style={{ ...inputStyle(), flex: "1 1 240px" }} placeholder="Search by title, skill or client…" aria-label="Search projects" />
-        <select id="proj-cat" value={category} onChange={e => setCategory(e.target.value)} style={{ ...selectStyle(), width: "auto", minWidth: 200 }} aria-label="Filter by category">
-          <option value="all">All categories</option>
-          {PROJECT_CATEGORIES.map(c => <option key={c} value={c}>{PROJECT_CATEGORY_LABEL[c]}</option>)}
-        </select>
+      {/* Filter and Search Bar */}
+      <div
+        style={{
+          background: "#fff",
+          border: "1px solid var(--border)",
+          borderRadius: 14,
+          padding: 16,
+          marginBottom: 20,
+          boxShadow: "var(--shadow-sm)",
+          display: "flex",
+          flexDirection: "column",
+          gap: 12,
+        }}
+      >
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <div style={{ position: "relative", flex: "1 1 280px" }}>
+            <span
+              style={{
+                position: "absolute",
+                left: 12,
+                top: "50%",
+                transform: "translateY(-50%)",
+                color: "var(--ink-subtle)",
+                fontSize: 14,
+                pointerEvents: "none",
+              }}
+            >
+              🔍
+            </span>
+            <input
+              id="proj-search"
+              value={q}
+              onChange={e => setQ(e.target.value)}
+              style={{ ...inputStyle(), paddingLeft: 34 }}
+              placeholder="Search by title, required skills, or client name…"
+              aria-label="Search projects"
+            />
+          </div>
+
+          <select
+            id="proj-cat"
+            value={category}
+            onChange={e => setCategory(e.target.value)}
+            style={{ ...selectStyle(), width: "auto", minWidth: 200, cursor: "pointer" }}
+            aria-label="Filter by category"
+          >
+            <option value="all">All Categories ({projects.length})</option>
+            {PROJECT_CATEGORIES.map(c => {
+              const count = projects.filter(p => p.category === c).length;
+              return (
+                <option key={c} value={c}>
+                  {PROJECT_CATEGORY_LABEL[c]} ({count})
+                </option>
+              );
+            })}
+          </select>
+        </div>
+
+        {/* Quick Filter Pills */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", paddingTop: 4 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-subtle)", marginRight: 4 }}>Quick Filters:</span>
+          {(
+            [
+              { id: "all", label: "All Projects" },
+              { id: "teams", label: "👥 Team Projects" },
+              { id: "solo", label: "👤 Solo Only" },
+              { id: "urgent", label: "⏳ Closing Soon (≤3d)" },
+            ] as const
+          ).map(f => (
+            <button
+              key={f.id}
+              onClick={() => setFilterMode(f.id)}
+              style={{
+                padding: "4px 12px",
+                borderRadius: 20,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+                border: filterMode === f.id ? "1.5px solid var(--navy)" : "1px solid var(--border)",
+                background: filterMode === f.id ? "var(--navy)" : "#FAFAFA",
+                color: filterMode === f.id ? "#fff" : "var(--ink-muted)",
+                transition: "all 0.15s",
+              }}
+            >
+              {f.label}
+            </button>
+          ))}
+          {(q || category !== "all" || filterMode !== "all") && (
+            <button
+              onClick={() => {
+                setQ("");
+                setCategory("all");
+                setFilterMode("all");
+              }}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#9B2C2C",
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: "pointer",
+                padding: "4px 8px",
+                marginLeft: "auto",
+              }}
+            >
+              Reset Filters ✕
+            </button>
+          )}
+        </div>
       </div>
 
       {visible.length === 0 ? (
-        <EmptyState icon="📭" title={projects.length === 0 ? "No open projects right now" : "No projects match your search"} hint={projects.length === 0 ? "Check back soon — new projects are posted regularly." : "Try a different keyword or category."} />
+        <EmptyState
+          icon="📭"
+          title={projects.length === 0 ? "No open projects right now" : "No projects match your search criteria"}
+          hint={
+            projects.length === 0
+              ? "New client projects are posted regularly. Check back soon or ensure your profile is up to date."
+              : "Try adjusting your search terms or clearing the selected category filter."
+          }
+          action={
+            (q || category !== "all" || filterMode !== "all") && (
+              <Btn
+                variant="ghost"
+                onClick={() => {
+                  setQ("");
+                  setCategory("all");
+                  setFilterMode("all");
+                }}
+              >
+                Clear all filters
+              </Btn>
+            )
+          }
+        />
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {visible.map(p => {
             const app = appFor(p.id);
             const sub = app ? submissions.find(s => s.teamId === app.teamId) : undefined;
             const days = daysUntil(p.deadline);
+            const isUrgent = days >= 0 && days <= 3;
+            const isClosed = days < 0;
+
             return (
-              <Card key={p.id}>
+              <div
+                key={p.id}
+                style={{
+                  background: "#fff",
+                  border: p.featured ? "1.5px solid rgba(201,162,39,0.5)" : "1px solid var(--border)",
+                  borderRadius: 16,
+                  padding: "22px 24px",
+                  boxShadow: "var(--shadow-sm)",
+                  transition: "border-color 0.2s, box-shadow 0.2s",
+                }}
+              >
+                {/* Header Row */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 10, flexWrap: "wrap" }}>
                   <div style={{ minWidth: 0 }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: "var(--gold)", textTransform: "uppercase" }}>{PROJECT_CATEGORY_LABEL[p.category]}</span>
-                    {p.featured && <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 800, color: "var(--navy)", background: "var(--gold)", padding: "2px 8px", borderRadius: 6, textTransform: "uppercase" }}>★ Featured</span>}
-                    <h4 style={{ fontSize: 17, fontWeight: 700, color: "var(--navy)", margin: "2px 0 4px" }}>
-                      <Link href={`/projects/${p.id}`} style={{ color: "inherit", textDecoration: "none" }}>{p.title}</Link>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
+                      <span
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 800,
+                          letterSpacing: "0.06em",
+                          color: "var(--gold)",
+                          textTransform: "uppercase",
+                          background: "rgba(201,162,39,0.12)",
+                          padding: "2px 8px",
+                          borderRadius: 6,
+                        }}
+                      >
+                        {PROJECT_CATEGORY_LABEL[p.category]}
+                      </span>
+                      {p.featured && (
+                        <span
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 800,
+                            color: "var(--navy)",
+                            background: "linear-gradient(135deg, #F1E3B4 0%, #C9A227 100%)",
+                            padding: "2px 8px",
+                            borderRadius: 6,
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          ★ Featured
+                        </span>
+                      )}
+                    </div>
+
+                    <h4 style={{ fontSize: 18, fontWeight: 800, color: "var(--navy)", margin: "4px 0 6px" }}>
+                      <Link href={`/projects/${p.id}`} style={{ color: "inherit", textDecoration: "none" }}>
+                        {p.title}
+                      </Link>
                     </h4>
+
                     {p.client && (
                       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                        <Link href={`/clients/${p.client.id}`} style={{ fontSize: 13, fontWeight: 600, color: "var(--gold)", textDecoration: "none" }}>{p.client.name}</Link>
-                        <span style={{ fontSize: 11, color: "var(--ink-subtle)" }}>{p.client.clientType ? CLIENT_TYPE_LABEL[p.client.clientType] : ""}</span>
+                        <Link href={`/clients/${p.client.id}`} style={{ fontSize: 13, fontWeight: 700, color: "var(--navy)", textDecoration: "none" }}>
+                          🏢 {p.client.name}
+                        </Link>
+                        {p.client.clientType && (
+                          <span style={{ fontSize: 11, color: "var(--ink-subtle)", background: "#EDF2F7", padding: "1px 6px", borderRadius: 4 }}>
+                            {CLIENT_TYPE_LABEL[p.client.clientType]}
+                          </span>
+                        )}
                         <VerificationBadge status={p.client.verificationStatus} />
                       </div>
                     )}
                   </div>
-                  <span style={{ fontSize: 12, color: days <= 3 ? "#9B2C2C" : "var(--ink-subtle)", whiteSpace: "nowrap", fontWeight: days <= 3 ? 700 : 400 }}>📅 {formatDate(p.deadline)} · {days} day{days !== 1 ? "s" : ""} left</span>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      fontSize: 12,
+                      fontWeight: isUrgent ? 800 : 600,
+                      color: isClosed ? "var(--ink-subtle)" : isUrgent ? "#9B2C2C" : "var(--navy)",
+                      background: isClosed ? "#EDF2F7" : isUrgent ? "rgba(229,62,62,0.1)" : "rgba(15,42,74,0.06)",
+                      padding: "4px 12px",
+                      borderRadius: 20,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    <span>📅</span>
+                    <span>
+                      {isClosed ? "Deadline passed" : `Due ${formatDate(p.deadline)} (${days} day${days !== 1 ? "s" : ""} left)`}
+                    </span>
+                  </div>
                 </div>
-                <p style={{ fontSize: 14, color: "var(--ink-muted)", margin: "0 0 12px", lineHeight: 1.6 }}>{p.description}</p>
-                <div style={{ marginBottom: 14 }}><SkillChips skills={p.requiredSkills} /></div>
-                <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                  {sub && sub.status !== "REJECTED" ? (
-                    <Btn variant="ghost" small onClick={() => goTo("submissions")}>View submission</Btn>
-                  ) : app?.status === "SELECTED" ? (
-                    <Btn variant="success" onClick={() => goTo("submissions")}>📤 Submit deliverables</Btn>
-                  ) : app ? (
-                    <Btn variant="ghost" disabled>{app.status === "REJECTED" ? "Not selected" : app.status === "SHORTLISTED" ? "Shortlisted ✓" : "Application pending"}</Btn>
-                  ) : teamFor(p.id) ? (
-                    <Btn variant="gold" onClick={() => goTo("teams")}>👥 Continue with your team</Btn>
-                  ) : (
-                    <Btn onClick={() => startApply(p)}>Apply →</Btn>
-                  )}
-                  <span style={{ fontSize: 12, color: "var(--ink-subtle)" }}>{p.teamCap > 1 ? `Teams of up to ${p.teamCap}` : "Individuals only"} · {p._count?.applications ?? 0} applied</span>
+
+                {/* Description */}
+                <p style={{ fontSize: 14, color: "var(--ink-muted)", margin: "0 0 14px", lineHeight: 1.6 }}>{p.description}</p>
+
+                {/* Required Skills */}
+                <div style={{ marginBottom: 16 }}>
+                  <SkillChips skills={p.requiredSkills} />
                 </div>
-              </Card>
+
+                {/* Footer Controls */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 12,
+                    flexWrap: "wrap",
+                    paddingTop: 14,
+                    borderTop: "1px solid var(--border)",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 12, color: "var(--ink-subtle)", flexWrap: "wrap" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: 4, fontWeight: 600 }}>
+                      <span>👥</span> {p.teamCap > 1 ? `Teams of up to ${p.teamCap}` : "Individual applicants only"}
+                    </span>
+                    <span>•</span>
+                    <span>{p._count?.applications ?? 0} applied</span>
+                  </div>
+
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                    <Link
+                      href={`/projects/${p.id}`}
+                      style={{
+                        padding: "8px 14px",
+                        borderRadius: 8,
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: "var(--navy)",
+                        background: "transparent",
+                        border: "1px solid var(--border)",
+                        textDecoration: "none",
+                      }}
+                    >
+                      Details ↗
+                    </Link>
+
+                    {sub && sub.status !== "REJECTED" ? (
+                      <Btn variant="ghost" small onClick={() => goTo("submissions")}>
+                        View Submission
+                      </Btn>
+                    ) : app?.status === "SELECTED" ? (
+                      <Btn variant="success" onClick={() => goTo("submissions")}>
+                        📤 Submit Deliverables
+                      </Btn>
+                    ) : app ? (
+                      <Btn variant="ghost" disabled>
+                        {app.status === "REJECTED"
+                          ? "Not selected"
+                          : app.status === "SHORTLISTED"
+                          ? "Shortlisted ✓"
+                          : "Application pending"}
+                      </Btn>
+                    ) : teamFor(p.id) ? (
+                      <Btn variant="gold" onClick={() => goTo("teams")}>
+                        👥 Continue with Your Team
+                      </Btn>
+                    ) : (
+                      <Btn variant="primary" onClick={() => startApply(p)}>
+                        Apply Now →
+                      </Btn>
+                    )}
+                  </div>
+                </div>
+              </div>
             );
           })}
         </div>
       )}
 
+      {/* Choice Modal: Solo vs Build Team */}
       {choice && (
-        <Modal title={`Apply to ${choice.title}`} subtitle={`${choice.client?.name ?? "Client"} · teams of up to ${choice.teamCap}. Apply on your own, or build a team and apply together — everyone on the team earns a certificate.`} onClose={() => setChoice(null)}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }} className="mobile-dashboard-form-grid">
-            <button onClick={() => { const p = choice; setChoice(null); setApplying(p); setForm({ teamName: "", pitch: "" }); setError(null); }} style={{ textAlign: "left", padding: 16, border: "1.5px solid var(--border)", borderRadius: 12, background: "#FAFAFA", cursor: "pointer" }}>
-              <div style={{ fontSize: 15, fontWeight: 800, color: "var(--navy)" }}>🙋 Apply solo</div>
-              <div style={{ fontSize: 12, color: "var(--ink-muted)", marginTop: 4 }}>Just you. Quickest way to apply.</div>
+        <Modal
+          title={`Apply to ${choice.title}`}
+          subtitle={`${choice.client?.name ?? "Client"} · Supports teams of up to ${choice.teamCap}. Apply solo, or assemble a team with friends — all members earn verified certificates on completion.`}
+          onClose={() => setChoice(null)}
+          maxWidth={560}
+        >
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 16 }} className="mobile-dashboard-form-grid">
+            <button
+              onClick={() => {
+                const p = choice;
+                setChoice(null);
+                setApplying(p);
+                setForm({ teamName: "", pitch: "" });
+                setError(null);
+              }}
+              style={{
+                textAlign: "left",
+                padding: 18,
+                border: "1.5px solid var(--border)",
+                borderRadius: 14,
+                background: "#FAFAFA",
+                cursor: "pointer",
+                transition: "all 0.15s",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+              }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = "var(--navy)")}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = "var(--border)")}
+            >
+              <div>
+                <div style={{ fontSize: 24, marginBottom: 8 }}>🙋</div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: "var(--navy)" }}>Apply Solo</div>
+                <div style={{ fontSize: 12, color: "var(--ink-muted)", marginTop: 4, lineHeight: 1.4 }}>
+                  Apply as an individual applicant. Fast, direct submission.
+                </div>
+              </div>
+              <span style={{ marginTop: 16, fontSize: 12, fontWeight: 700, color: "var(--navy)" }}>Proceed Solo →</span>
             </button>
-            <div style={{ padding: 16, border: "1.5px solid var(--gold)", borderRadius: 12, background: "#FFFDF5" }}>
-              <div style={{ fontSize: 15, fontWeight: 800, color: "var(--navy)" }}>👥 Build a team</div>
-              <div style={{ fontSize: 12, color: "var(--ink-muted)", margin: "4px 0 10px" }}>Create the team now, invite people by email, apply when everyone has joined.</div>
-              <form onSubmit={createTeam} style={{ display: "flex", gap: 8 }}>
-                <input id="team-name" value={teamName} onChange={e => setTeamName(e.target.value)} style={{ ...inputStyle(), flex: 1 }} placeholder="Team name" maxLength={100} required />
-                <Btn type="submit" variant="gold" small disabled={creating}>{creating ? "…" : "Create"}</Btn>
+
+            <div
+              style={{
+                padding: 18,
+                border: "1.5px solid var(--gold)",
+                borderRadius: 14,
+                background: "linear-gradient(135deg, #FFFDF5 0%, #FFFBEB 100%)",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+              }}
+            >
+              <div>
+                <div style={{ fontSize: 24, marginBottom: 8 }}>👥</div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: "var(--navy)" }}>Build a Team</div>
+                <div style={{ fontSize: 12, color: "var(--ink-muted)", margin: "4px 0 12px", lineHeight: 1.4 }}>
+                  Create your team workspace, invite collaborators via email, and apply together.
+                </div>
+              </div>
+
+              <form onSubmit={createTeam} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <input
+                  id="team-name"
+                  value={teamName}
+                  onChange={e => setTeamName(e.target.value)}
+                  style={{ ...inputStyle(), padding: "8px 12px", fontSize: 13 }}
+                  placeholder="Enter team name"
+                  maxLength={100}
+                  required
+                />
+                <Btn type="submit" variant="gold" small disabled={creating}>
+                  {creating ? "Creating Team…" : "Create & Build Team →"}
+                </Btn>
               </form>
             </div>
           </div>
@@ -157,23 +542,58 @@ export function ProjectsTab({ projects, applications, submissions, teams, onChan
         </Modal>
       )}
 
+      {/* Solo Application Form Modal */}
       {applying && (
-        <Modal title={`Apply to ${applying.title}`} subtitle={`${applying.client?.name ?? "Client"} · deadline ${formatDate(applying.deadline)}. You are applying on your own.`} onClose={() => setApplying(null)}>
+        <Modal
+          title={`Apply to ${applying.title}`}
+          subtitle={`${applying.client?.name ?? "Client"} · Due ${formatDate(applying.deadline)}. You are applying as an individual.`}
+          onClose={() => setApplying(null)}
+          maxWidth={540}
+        >
           <form onSubmit={apply} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <Field label="Applicant name" required hint="How the client will see you. Your own name is fine.">
-              <input id="apply-team" value={form.teamName} onChange={e => setForm({ ...form, teamName: e.target.value })} style={inputStyle()} placeholder="e.g. Ayesha Khan" maxLength={100} required autoFocus />
+            <Field label="Applicant Display Name" required hint="How the client will see your application name.">
+              <input
+                id="apply-team"
+                value={form.teamName}
+                onChange={e => setForm({ ...form, teamName: e.target.value })}
+                style={inputStyle()}
+                placeholder="e.g. Ayesha Khan"
+                maxLength={100}
+                required
+                autoFocus
+              />
             </Field>
-            <Field label="Pitch" required>
-              <textarea id="apply-pitch" value={form.pitch} onChange={e => setForm({ ...form, pitch: e.target.value })} rows={5} style={textareaStyle()} placeholder="Why you? Relevant experience, links to similar work, how you would approach this." required />
+
+            <Field
+              label="Your Pitch & Approach"
+              required
+              hint="Explain why you are the best fit, highlight relevant previous work or portfolio links, and describe your planned timeline."
+            >
+              <textarea
+                id="apply-pitch"
+                value={form.pitch}
+                onChange={e => setForm({ ...form, pitch: e.target.value })}
+                rows={5}
+                style={textareaStyle()}
+                placeholder="Hi! I have built similar systems using React and TypeScript. My approach would be..."
+                required
+              />
             </Field>
+
             {error && <Notice kind="error">{error}</Notice>}
-            <div style={{ display: "flex", gap: 10 }}>
-              <Btn type="button" variant="ghost" style={{ flex: 1 }} onClick={() => setApplying(null)}>Cancel</Btn>
-              <Btn type="submit" style={{ flex: 2 }} disabled={busy}>{busy ? "Sending…" : "Send application"}</Btn>
+
+            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+              <Btn type="button" variant="ghost" style={{ flex: 1 }} onClick={() => setApplying(null)}>
+                Cancel
+              </Btn>
+              <Btn type="submit" variant="primary" style={{ flex: 2 }} disabled={busy}>
+                {busy ? "Sending Application…" : "Submit Application →"}
+              </Btn>
             </div>
           </form>
         </Modal>
       )}
+
       {planModal && <PlanRequiredModal reason={planModal} audience="talent" onClose={() => setPlanModal(null)} />}
     </div>
   );

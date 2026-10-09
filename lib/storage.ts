@@ -12,7 +12,7 @@ export interface DocumentStorage {
   delete(key: string): Promise<void>;
 }
 
-export const MAX_DOCUMENT_BYTES = 5 * 1024 * 1024;
+export { MAX_DOCUMENT_BYTES } from "@/lib/upload-limits";
 export const ALLOWED_DOCUMENT_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
 
 const postgresStorage: DocumentStorage = {

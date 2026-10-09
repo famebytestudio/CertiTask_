@@ -1,5 +1,6 @@
 "use client";
 
+import { PageIntro } from "@/components/PageIntro";
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/Button";
@@ -54,21 +55,12 @@ export default function ProjectsPage() {
   const displayed = showAll ? filtered : filtered.slice(0, 6);
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <section className="bg-gradient-to-b from-navy-dark to-navy text-paper py-20 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#C9A227_1px,transparent_1px),linear-gradient(to_bottom,#C9A227_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 space-y-6">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold tracking-wider bg-gold/15 text-gold border border-gold/30">Open projects</span>
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight">Real work. <span className="text-gold">Real proof.</span></h1>
-          <p className="text-paper/85 text-lg max-w-2xl mx-auto leading-relaxed">
-            Short, well-scoped projects from organizations and individuals. Finish one, get it approved, and earn a certificate anyone can verify.
-          </p>
-        </div>
-      </section>
+    <div className="directory-page flex flex-col min-h-screen">
+      <PageIntro eyebrow="FIND YOUR NEXT CHAPTER" title="A little curiosity." accent="A real opportunity." description="Find a brief that fits your skills. Create something useful, get feedback, and earn proof of what you can do."></PageIntro>
 
       <section className="py-20 bg-paper text-ink flex-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-          <div className="bg-white p-6 rounded-xl border border-navy/5 shadow-xs space-y-6">
+          <div className="directory-filters bg-white p-6 rounded-xl border border-navy/5 shadow-xs space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="md:col-span-3 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -76,7 +68,7 @@ export default function ProjectsPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </div>
-                <input id="project-search" type="text" placeholder="Search by title, skill or client…" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                <input aria-label="Search projects" id="project-search" type="text" placeholder="Search by title, skill or client…" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                   className="block w-full pl-10 pr-4 py-3 bg-paper border border-navy/15 rounded-lg text-ink font-sans focus:outline-hidden focus:ring-2 focus:ring-gold/50 focus:border-gold transition-colors text-sm" />
               </div>
               <Button variant="primary" onClick={() => { setSearchQuery(""); setCategory("All"); setVerifiedOnly(false); setTeamsOnly(false); setSort("newest"); setShowAll(false); }} className="w-full">Reset</Button>
@@ -112,7 +104,7 @@ export default function ProjectsPage() {
                 {displayed.map((p) => {
                   const d = daysLeft(p.deadline);
                   return (
-                    <div key={p.id} className="bg-white p-6 rounded-xl border border-navy/5 shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between">
+                    <div key={p.id} className="directory-card bg-white p-6 rounded-xl border border-navy/5 shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between">
                       <div className="space-y-4">
                         <div>
                           <span className="text-[10px] font-bold text-gold uppercase tracking-wider bg-gold/10 px-2 py-0.5 rounded border border-gold/10">{PROJECT_CATEGORY_LABEL[p.category]}</span>

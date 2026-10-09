@@ -1,3 +1,4 @@
+import { PageIntro } from "@/components/PageIntro";
 import Link from "next/link";
 import { Button } from "@/components/Button";
 import { PlanCards } from "@/components/billing/PlanCards";
@@ -11,25 +12,7 @@ export default function PricingPage() {
   const talentPlans = planCatalog("TALENT");
   return (
     <div className="min-h-screen bg-paper text-ink">
-      <section className="relative overflow-hidden bg-navy-dark text-paper">
-        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_80%_20%,#C9A227_0,transparent_28%),linear-gradient(125deg,transparent_0%,rgba(255,255,255,0.04)_48%,transparent_48%)]" />
-        <div className="relative mx-auto max-w-7xl px-4 pb-14 pt-16 sm:px-6 lg:px-8 lg:pb-20 lg:pt-24">
-          <div className="max-w-3xl">
-            <div className="mb-6 flex items-center gap-3 text-xs font-bold uppercase tracking-[0.22em] text-gold"><span className="h-px w-10 bg-gold" />CertiTask pricing</div>
-            <h1 className="max-w-2xl text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl">Choose the pace that fits your work.</h1>
-            <p className="mt-6 max-w-2xl text-base leading-8 text-paper/75 sm:text-lg">Two ways to grow on CertiTask. Clients pay to publish stronger opportunities. Talents pay only when they need more application capacity.</p>
-            <div className="mt-9 flex flex-wrap gap-3">
-              <a href="#client-plans" className="inline-flex items-center rounded-lg bg-gold px-5 py-3 text-sm font-bold text-navy-dark transition hover:bg-gold-light">View client plans</a>
-              <a href="#talent-plans" className="inline-flex items-center rounded-lg border border-paper/25 px-5 py-3 text-sm font-bold text-paper transition hover:border-gold hover:text-gold">View talent plans</a>
-            </div>
-          </div>
-          <div className="mt-14 grid max-w-3xl grid-cols-1 gap-3 sm:grid-cols-3">
-            <div className="border-l-2 border-gold px-4"><div className="text-2xl font-extrabold">{FREE_POSTS}</div><div className="mt-1 text-xs text-paper/60">free starts for each role</div></div>
-            <div className="border-l-2 border-paper/25 px-4"><div className="text-2xl font-extrabold">{PERIOD_DAYS}</div><div className="mt-1 text-xs text-paper/60">days per paid period</div></div>
-            <div className="border-l-2 border-paper/25 px-4"><div className="text-2xl font-extrabold">$5</div><div className="mt-1 text-xs text-paper/60">starting plan price</div></div>
-          </div>
-        </div>
-      </section>
+      <PageIntro eyebrow="ROOM TO GROW" title="Your ambition." accent="Your pace." description="Start free, then choose a 30-day plan when you’re ready for more. Clear limits, useful features, and room for your next chapter."><a href="#client-plans" className="ct-button ct-button-dark">For clients ↗</a><a href="#talent-plans" className="ct-text-link">For talent ↗</a></PageIntro>
 
       <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-20">
         <section id="client-plans" className="scroll-mt-28">

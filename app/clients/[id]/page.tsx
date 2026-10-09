@@ -1,33 +1,31 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { CLIENT_TYPE_LABEL, PROJECT_CATEGORY_LABEL, statusLabel, type ClientType, type ProjectCategory, type VerificationStatus } from "@/lib/enums";
 
 interface ClientDetail {
-  id: string;
-  name: string;
-  clientType: ClientType | null;
-  verificationStatus: VerificationStatus;
-  bio: string | null;
-  website: string | null;
-  avatarUrl: string | null;
-  location: string | null;
-  industry: string | null;
-  organizationSize: string | null;
-  foundedYear: number | null;
-  linkedinUrl: string | null;
-  createdAt: string;
+  id: string; name: string; clientType: ClientType | null; verificationStatus: VerificationStatus;
+  bio: string | null; website: string | null; avatarUrl: string | null; location: string | null;
+  industry: string | null; organizationSize: string | null; foundedYear: number | null;
+  linkedinUrl: string | null; createdAt: string;
   _count: { projectsPosted: number; certificatesIssued: number };
-  projectsPosted: Array<{
-    id: string; title: string; description: string; category: ProjectCategory; requiredSkills: string[];
-    status: string; deadline: string; teamCap: number; _count: { applications: number; submissions: number };
-  }>;
+  projectsPosted: Array<{ id: string; title: string; description: string; category: ProjectCategory;
+    requiredSkills: string[]; status: string; deadline: string; teamCap: number;
+    _count: { applications: number; submissions: number } }>;
 }
 
-function fmt(iso: string) {
-  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+function date(iso: string) { return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }); }
+
+function ProjectCard({ project }: { project: ClientDetail["projectsPosted"][number] }) {
+  return <Link href={`/projects/${project.id}`} className="client-profile-project">
+    <div className="client-profile-project-top"><span>{PROJECT_CATEGORY_LABEL[project.category]}</span><span className={project.status === "ACTIVE" ? "is-active" : ""}>{statusLabel(project.status)}</span></div>
+    <h3>{project.title}</h3><p>{project.description}</p>
+    <div className="client-profile-project-skills">{project.requiredSkills.slice(0, 5).map(skill => <span key={skill}>{skill}</span>)}</div>
+    <div className="client-profile-project-foot"><span>Due {date(project.deadline)}</span><span>{project.teamCap > 1 ? `Teams up to ${project.teamCap}` : "Individual work"}</span><strong>View brief ↗</strong></div>
+  </Link>;
 }
 
 export default function ClientDetailPage() {
@@ -37,121 +35,27 @@ export default function ClientDetailPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await fetch(`/api/clients/${params.id}`);
-        if (!res.ok) throw new Error("Client not found");
-        const data = await res.json();
-        setClient(data.client);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Client not found");
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
+    const controller = new AbortController();
+    fetch(`/api/clients/${encodeURIComponent(String(params.id))}`, { signal: controller.signal })
+      .then(async response => { if (!response.ok) throw new Error("Client not found"); return response.json(); })
+      .then(data => setClient(data.client))
+      .catch(reason => { if (reason.name !== "AbortError") setError(reason instanceof Error ? reason.message : "Client not found"); })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
   }, [params.id]);
 
-  if (loading) return <div className="flex justify-center items-center min-h-screen"><p className="text-navy font-bold">Loading…</p></div>;
-  if (error || !client) return (
-    <div className="flex justify-center items-center min-h-screen">
-      <div className="text-center">
-        <p className="text-red-600 font-bold">{error || "Client not found"}</p>
-        <Link href="/clients" className="text-gold hover:underline mt-4 inline-block">← Back to clients</Link>
-      </div>
-    </div>
-  );
+  if (loading) return <div className="client-profile-loading" role="status">Loading client profile…</div>;
+  if (error || !client) return <div className="client-profile-loading"><div><h1>{error || "Client not found"}</h1><Link href="/clients" className="ct-text-link">Back to clients ↗</Link></div></div>;
 
-  const verified = client.verificationStatus === "VERIFIED";
-  const open = client.projectsPosted.filter(p => p.status === "ACTIVE");
-  const past = client.projectsPosted.filter(p => p.status !== "ACTIVE");
+  const open = client.projectsPosted.filter(project => project.status === "ACTIVE");
+  const past = client.projectsPosted.filter(project => project.status !== "ACTIVE");
+  return <div className="client-profile-page">
+    <section className="client-profile-hero"><div className="ct-container"><Link href="/clients" className="client-profile-back">← All clients</Link><div className="client-profile-hero-inner"><div className="client-profile-identity"><div className="client-profile-avatar">{client.avatarUrl ? <Image unoptimized src={client.avatarUrl} width={90} height={90} alt="" /> : client.name.charAt(0).toUpperCase()}</div><div><p className="eyebrow">MEET THE CLIENT</p><h1>{client.name}</h1><div className="client-profile-badges">{client.clientType && <span>{CLIENT_TYPE_LABEL[client.clientType]}</span>}{client.verificationStatus === "VERIFIED" && <span className="verified">✓ Verified identity</span>}{client.industry && <span>{client.industry}</span>}</div></div></div><div className="client-profile-location">{client.location || "Working from anywhere"}<span aria-hidden="true">✳</span></div></div></div></section>
 
-  const ProjectCard = ({ p }: { p: ClientDetail["projectsPosted"][number] }) => (
-    <Link href={`/projects/${p.id}`} className="block border border-navy/10 rounded-lg p-5 hover:border-gold transition-colors">
-      <div className="flex justify-between items-start gap-3 mb-2 flex-wrap">
-        <div>
-          <span className="text-[10px] font-bold text-gold uppercase">{PROJECT_CATEGORY_LABEL[p.category]}</span>
-          <h3 className="font-bold text-navy text-lg">{p.title}</h3>
-        </div>
-        <span className={`px-2 py-1 rounded text-xs font-semibold ${p.status === "ACTIVE" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}`}>{statusLabel(p.status)}</span>
-      </div>
-      <p className="text-sm text-ink/80 mb-3 line-clamp-2">{p.description}</p>
-      <div className="flex flex-wrap gap-1 mb-3">
-        {p.requiredSkills.slice(0, 6).map(s => <span key={s} className="text-[11px] font-semibold text-navy bg-navy/5 border border-navy/10 rounded px-2 py-0.5">{s}</span>)}
-      </div>
-      <div className="flex gap-4 text-xs text-ink/70 flex-wrap">
-        <span>📅 {fmt(p.deadline)}</span>
-        <span>👥 Team up to {p.teamCap}</span>
-        <span>📋 {p._count.applications} applications</span>
-      </div>
-    </Link>
-  );
-
-  return (
-    <div className="min-h-screen bg-paper">
-      <section className="bg-gradient-to-b from-navy-dark to-navy text-paper py-16">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Link href="/clients" className="text-gold hover:underline text-sm mb-4 inline-block">← Back to clients</Link>
-          <div className="flex items-start gap-6 flex-wrap">
-            <div className="h-20 w-20 rounded-lg bg-gold flex items-center justify-center text-navy font-bold text-2xl shrink-0">{client.name.charAt(0).toUpperCase()}</div>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-4xl font-bold mb-2 break-words">{client.name}</h1>
-              <div className="flex flex-wrap gap-3 text-paper/90 text-sm items-center">
-                {client.clientType && <span className="px-2 py-0.5 rounded bg-gold/15 text-gold text-xs font-bold">{CLIENT_TYPE_LABEL[client.clientType]}</span>}
-                <span className={`px-2 py-0.5 rounded text-xs font-bold ${verified ? "bg-green-500/20 text-green-200" : "bg-white/10 text-paper/70"}`}>{verified ? "✓ Verified" : "Not yet verified"}</span>
-                {client.industry && <span>● {client.industry}</span>}
-                {client.location && <span>● {client.location}</span>}
-                {client.organizationSize && <span>● {client.organizationSize} people</span>}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-12">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            <div className="lg:col-span-2 space-y-8">
-              <div className="bg-white rounded-xl border border-navy/5 p-8">
-                <h2 className="text-2xl font-bold text-navy mb-4">About</h2>
-                <p className="text-ink/80 leading-relaxed whitespace-pre-wrap">{client.bio || "No description yet."}</p>
-                {client.foundedYear && <p className="text-sm text-ink/70 mt-4"><span className="font-semibold text-navy">Founded:</span> {client.foundedYear}</p>}
-              </div>
-
-              <div className="bg-white rounded-xl border border-navy/5 p-8">
-                <h2 className="text-2xl font-bold text-navy mb-6">Open projects ({open.length})</h2>
-                {open.length > 0 ? <div className="space-y-4">{open.map(p => <ProjectCard key={p.id} p={p} />)}</div> : <p className="text-ink/70">No open projects right now.</p>}
-              </div>
-
-              {past.length > 0 && (
-                <div className="bg-white rounded-xl border border-navy/5 p-8">
-                  <h2 className="text-2xl font-bold text-navy mb-6">Past projects ({past.length})</h2>
-                  <div className="space-y-4">{past.map(p => <ProjectCard key={p.id} p={p} />)}</div>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-6">
-              <div className="bg-white rounded-xl border border-navy/5 p-6">
-                <h3 className="font-bold text-navy mb-4">Links</h3>
-                <div className="space-y-3 text-sm">
-                  {client.website && <a href={client.website} target="_blank" rel="noopener noreferrer" className="block text-gold hover:underline break-all">🌐 {client.website.replace(/^https?:\/\//, "")}</a>}
-                  {client.linkedinUrl && <a href={client.linkedinUrl} target="_blank" rel="noopener noreferrer" className="block text-gold hover:underline">💼 LinkedIn</a>}
-                  {!client.website && !client.linkedinUrl && <p className="text-ink/60">No links added.</p>}
-                </div>
-              </div>
-              <div className="bg-white rounded-xl border border-navy/5 p-6">
-                <h3 className="font-bold text-navy mb-4">Activity</h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between"><span className="text-ink/70 text-sm">Projects posted</span><span className="font-bold text-navy">{client._count.projectsPosted}</span></div>
-                  <div className="flex justify-between"><span className="text-ink/70 text-sm">Certificates issued</span><span className="font-bold text-navy">{client._count.certificatesIssued}</span></div>
-                  <div className="flex justify-between"><span className="text-ink/70 text-sm">Member since</span><span className="font-bold text-navy">{fmt(client.createdAt)}</span></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
-  );
+    <main className="ct-container client-profile-content"><div className="client-profile-main">
+      <section className="client-profile-section"><p className="eyebrow">THEIR STORY</p><h2>About {client.name}</h2><p className="client-profile-bio">{client.bio || "This client is ready to collaborate on meaningful projects."}</p>{client.foundedYear && <p className="client-profile-founded">Founded in {client.foundedYear}</p>}</section>
+      <section className="client-profile-section"><div className="client-profile-section-title"><div><p className="eyebrow">READY FOR YOUR IDEAS</p><h2>Open projects <span>({open.length})</span></h2></div><Link href="/projects" className="ct-text-link">Explore all projects ↗</Link></div>{open.length ? <div className="client-profile-project-list">{open.map(project => <ProjectCard key={project.id} project={project} />)}</div> : <p className="client-profile-no-projects">No open projects from this client right now. Check back soon.</p>}</section>
+      {past.length > 0 && <section className="client-profile-section"><p className="eyebrow">PREVIOUS WORK</p><h2>Past projects <span>({past.length})</span></h2><div className="client-profile-project-list">{past.map(project => <ProjectCard key={project.id} project={project} />)}</div></section>}
+    </div><aside className="client-profile-side"><div className="client-profile-side-card"><p className="eyebrow">AT A GLANCE</p><h2>A track record<br /><span className="hero-serif">in the making.</span></h2><div className="client-profile-stat"><strong>{client._count.projectsPosted}</strong><span>projects posted</span></div><div className="client-profile-stat"><strong>{client._count.certificatesIssued}</strong><span>certificates issued</span></div><div className="client-profile-stat"><strong>{date(client.createdAt)}</strong><span>member since</span></div></div><div className="client-profile-side-card"><p className="eyebrow">CONNECT</p><h2>Find out more.</h2>{client.website && <a href={client.website} target="_blank" rel="noopener noreferrer">Website <span aria-hidden="true">↗</span></a>}{client.linkedinUrl && <a href={client.linkedinUrl} target="_blank" rel="noopener noreferrer">LinkedIn <span aria-hidden="true">↗</span></a>}{!client.website && !client.linkedinUrl && <p>No links shared yet.</p>}</div></aside></main>
+  </div>;
 }

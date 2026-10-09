@@ -1,158 +1,68 @@
-# CertiTask — Certification & Task Management Platform
+# CertiTask
 
-CertiTask is a web application designed to connect **Companies** and **Students** through certification issuance, trainee roster management, and task tracking. 
+CertiTask connects clients with talent through real projects, team applications, deliverable review, and publicly verifiable certificates.
 
-Built with **Next.js 16**, **React 19**, **Prisma ORM v7**, **Neon PostgreSQL**, and custom **JWT HTTP-Only Cookie Authentication**.
+Built with Next.js App Router, React, TypeScript, Prisma 7, PostgreSQL/Neon, HTTP-only JWT sessions backed by database sessions, SMTP email, Upstash rate limiting, and Safepay hosted checkout.
 
----
+## Features
 
-## 🚀 Features
+- **Clients:** individual/organization profiles, email and identity verification, draft/published projects, team application selection, submission feedback, certificate issuance and revocation, project analytics and plan entitlements.
+- **Talent:** editable profiles and photos, skills/education/portfolio/resume links, solo and team applications, invitations, deliverable submission and resubmission, held certificates released after identity verification, certificate PDF downloads and sharing.
+- **Billing:** prepaid 30-day plans for both roles, server-controlled prices, verified provider captures, payment history and PDF receipts, refunds, expiry reminders, free quotas and paid limits.
+- **Administration:** identity review, account suspension/session revocation, project and certificate moderation, payment review, contact messages, search, and audit history.
+- **Operations:** private document storage and retention, daily maintenance, distributed production rate limits, origin protection, security headers, environment checks, CI, and regression tests.
 
-- 🏢 **Company Portal (`/company/dashboard`)**:
-  - Issue accredited certifications to trainees.
-  - Assign trackable tasks with due dates and priority levels.
-  - Monitor enterprise compliance metrics and student progress in real-time.
-- 🎓 **Student Portal (`/student/dashboard`)**:
-  - View verified credential badges and certificates.
-  - Track assigned tasks with progress indicators and toggle completion status.
-  - Follow visual skill accreditation roadmaps.
-- 🔒 **Secure Custom Authentication**:
-  - Direct integration with **Neon PostgreSQL** via **Prisma ORM**.
-  - Password hashing with `bcryptjs`.
-  - Secure session cookies using `jose` (JWT) and Next.js Edge Middleware route protection.
+The current routes are `/client/dashboard` and `/talent/dashboard`. Older company/student URLs redirect to their current equivalents. Certificates prove an issuer-approved project outcome; they are not a claim of external institutional accreditation.
 
----
+## Local setup
 
-## 🛠️ Tech Stack
+Use Node.js 22.x and npm. From this application's directory:
 
-- **Framework**: Next.js 16 (App Router)
-- **Language**: TypeScript
-- **UI & Styling**: React 19, Vanilla CSS Design System, Tailwind CSS
-- **Database & ORM**: Neon PostgreSQL, Prisma ORM 7
-- **Auth & Security**: `bcryptjs` (password hashing), `jose` (JWT tokens in HTTP-only cookies)
-
----
-
-## 📋 Prerequisites
-
-Ensure you have the following installed on your system:
-- **Node.js** (v18.0.0 or higher)
-- **npm** (v9.0.0 or higher) or **pnpm** / **yarn**
-
----
-
-## ⚙️ Environment Setup
-
-Create a `.env` (or `.env.local`) file in the root directory of the project:
-
-```env
-# Neon PostgreSQL Database Connection String
-DATABASE_URL="postgresql://user:password@host:port/database?sslmode=verify-full"
-
-# JWT Secret Key for Session Encryption
-JWT_SECRET="replace-with-a-long-random-secret"
-
-# Public URL and password-reset email delivery
-APP_URL="https://your-production-domain.example"
-SMTP_HOST="smtp.example.com"
-SMTP_PORT="587"
-SMTP_USER="smtp-user"
-SMTP_PASS="smtp-password"
-EMAIL_FROM="no-reply@your-production-domain.example"
-
-# Admin authentication uses a bcrypt hash generated locally.
-SUPER_ADMIN_PASSWORD_HASH="replace-with-bcrypt-password-hash"
-
-# Required for distributed production rate limiting
-UPSTASH_REDIS_REST_URL="https://your-instance.upstash.io"
-UPSTASH_REDIS_REST_TOKEN="your-upstash-rest-token"
+```sh
+npm ci
 ```
 
----
+Copy `.env.example` to `.env` and configure the database, a long random `JWT_SECRET`, and email credentials. The template explains all variables. Never commit `.env`.
 
-## 📥 Installation & Running Locally
-
-### 1. Clone the Repository
-```bash
-git clone https://github.com/FaizaNaseem80/Certi-task.git
-cd certitask
-```
-
-### 2. Install Dependencies
-```bash
-npm install
-```
-
-### 3. Sync Database Schema with Neon PostgreSQL
-Run Prisma database push to create the required database tables (`User`, `Certificate`, `Task`) in your Neon PostgreSQL database:
-```bash
-npx prisma db push
-```
-
-For production, apply the committed migrations instead:
-
-```bash
-npx prisma migrate deploy
-```
-
-### 4. Start the Development Server
-```bash
+```sh
+npm run check:env
+npm run db:migrate
 npm run dev
 ```
 
-### 5. Open in Browser
-Navigate to [http://localhost:3000](http://localhost:3000) in your web browser.
+Visit `http://localhost:3000`. Create a client or talent account at `/auth/signup`. Email confirmation uses a six-digit code. Identity verification requires document upload and an administrator decision, rather than a simulated verification button.
 
----
+The administrator email and bcrypt password hash are configured using `SUPER_ADMIN_EMAIL` and `SUPER_ADMIN_PASSWORD_HASH`; access the portal at `/admin/login`. Escape dollar signs in local `.env` hashes as described in `.env.example`; paste ordinary unescaped hashes in Vercel settings.
 
-## 🔑 Usage Guide
+## Validation
 
-### Creating Accounts & Logging In
-1. Visit [http://localhost:3000/auth/signup](http://localhost:3000/auth/signup).
-2. Choose your role:
-   - **Company**: Select the **Company** tab to create an organization admin account.
-   - **Student**: Select the **Student** tab to create a student/learner account.
-3. Upon signup or login, you will be automatically redirected to your role's dashboard:
-   - **Company Admin** → `/company/dashboard`
-   - **Student Learner** → `/student/dashboard`
-
----
-
-## 🏗️ Production Build
-
-To test or generate the production bundle:
-
-```bash
-# Build the application
+```sh
+npx prisma generate
+npm run check
 npm run build
-
-# Start the production server
-npm run start
 ```
 
----
+`check` runs ESLint, TypeScript, and the regression tests. `build` generates Prisma Client and builds Next.js without applying database migrations. Tests use synthetic data and mocked database/provider operations.
 
-## 📁 Project Structure
+## Vercel
 
+Follow [DEPLOYMENT.md](./DEPLOYMENT.md) for root-directory settings, production variables, migration behavior, webhook setup, daily schedules, and launch validation. `vercel.json` selects the deployment build and cron schedules.
+
+```sh
+npm run check:env -- --production
 ```
-certitask/
-├── app/
-│   ├── api/
-│   │   └── auth/           # Signup, Login, Logout, Me API endpoints
-│   ├── auth/               # Login, Signup, Forgot/Reset Password pages
-│   ├── company/
-│   │   └── dashboard/      # Company Enterprise Portal
-│   ├── student/
-│   │   └── dashboard/      # Student Learner Portal
-│   ├── globals.css         # Global Brand Design Tokens & Styles
-│   ├── layout.tsx          # Root Layout
-│   └── page.tsx            # Home Page (Redirects to /auth/login)
-├── lib/
-│   ├── auth.ts             # Password hashing, JWT token & cookie utilities
-│   └── prisma.ts           # Prisma Client singleton
-├── prisma/
-│   ├── schema.prisma       # Database schema models (User, Certificate, Task)
-│   └── prisma.config.ts    # Prisma v7 configuration
-├── proxy.ts                # Next.js 16 Edge Middleware for route protection
-└── README.md
-```
+
+The production deployment build fails with named configuration errors if required launch settings are missing. Preview deployments should use a separate database and Safepay sandbox credentials. Database schema changes are committed as migrations; do not use `prisma db push` as the production deployment process.
+
+## Main directories
+
+| Directory | Purpose |
+| --- | --- |
+| `app/` | Public pages, auth, role dashboards, admin, billing, and API routes |
+| `components/` | Client/talent/admin dashboard components, verification, checkout, profile photos |
+| `lib/` | Authentication, queries, billing, certificates/PDF, storage, validation, notifications, email |
+| `prisma/` | Schema and committed migrations |
+| `scripts/` | Environment check, Vercel build, and development seed |
+| `tests/` | Security, billing concurrency, plan, and deployment regression tests |
+
+`PROFILE_FEATURES.md` and `IMPLEMENTATION_SUMMARY.md` preserve earlier project ideas. Their original company/student naming and simulated CNIC workflow have been superseded by the current client/talent verification implementation.

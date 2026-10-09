@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { background } from "@/lib/background";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
 import { isString } from "@/lib/validation";
@@ -49,7 +50,7 @@ export async function PATCH(req: Request, { params }: Params) {
     });
     await audit(auth, `certificate.${status.toLowerCase()}`, "certificate", certificate.id, { certId: certificate.certId, from: certificate.status, reason: reason ?? null });
     await notify(certificate.talentId, "certificate.status", `Certificate ${status.toLowerCase()}`, `${certificate.title} (${certificate.certId}) is now ${status.toLowerCase()}.${reason ? ` Reason: ${reason}` : ""}`, "/talent/dashboard?tab=certificates");
-    void sendCertificateStatusEmail(certificate.recipientEmail, certificate.recipientName, certificate.title, certificate.certId, status, reason ?? null, certificatePageUrl(certificate.certId)).catch(e => console.error("certificate status email failed:", e));
+    background("Certificate status email", () => sendCertificateStatusEmail(certificate.recipientEmail, certificate.recipientName, certificate.title, certificate.certId, status, reason ?? null, certificatePageUrl(certificate.certId)));
 
     return NextResponse.json({ success: true, certificate: updated });
   } catch (error) {

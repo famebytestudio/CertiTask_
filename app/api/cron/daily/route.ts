@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { background } from "@/lib/background";
 import { prisma } from "@/lib/prisma";
 import { audit } from "@/lib/audit";
 import { notify } from "@/lib/notifications";
@@ -7,6 +8,7 @@ import { appUrl } from "@/lib/email-verification";
 import { runBillingMaintenance } from "@/lib/billing";
 
 const REMINDER_DAYS = 3;
+export const maxDuration = 300;
 
 /**
  * GET /api/cron/daily  (Authorization: Bearer $CRON_SECRET) — run once a day.
@@ -23,6 +25,9 @@ export async function GET(req: Request) {
 
   // 0. sessions: drop rows that can never be used again (expired or revoked for a week)
   const prunedSessions = await prisma.session.deleteMany({ where: { OR: [{ expiresAt: { lt: new Date(now.getTime() - 7 * 86_400_000) } }, { revokedAt: { lt: new Date(now.getTime() - 7 * 86_400_000) } }] } });
+  const tokensBefore = new Date(now.getTime() - 7 * 86_400_000);
+  await prisma.passwordResetToken.deleteMany({ where: { expiresAt: { lt: tokensBefore } } });
+  await prisma.emailVerificationToken.deleteMany({ where: { expiresAt: { lt: tokensBefore } } });
 
   // 1. invitations
   const expiredMembers = await prisma.teamMember.updateMany({ where: { status: "INVITED", expiresAt: { lt: now } }, data: { status: "EXPIRED" } });
@@ -54,7 +59,7 @@ export async function GET(req: Request) {
   for (const t of teams) {
     for (const { user } of t.members) {
       await notify(user.id, "deadline.reminder", `Due in ${REMINDER_DAYS} days: ${t.project.title}`, "Your team hasn't submitted yet. Submit your deliverables before the deadline.", "/talent/dashboard?tab=submissions");
-      void sendDeadlineReminderEmail(user.email, user.name, t.project.title, t.project.deadline, `${appUrl()}/talent/dashboard?tab=submissions`).catch((e) => console.error("reminder email failed", e));
+      background("Deadline reminder email", () => sendDeadlineReminderEmail(user.email, user.name, t.project.title, t.project.deadline, `${appUrl()}/talent/dashboard?tab=submissions`));
     }
     await prisma.team.update({ where: { id: t.id }, data: { reminderSentAt: now } });
     reminded++;

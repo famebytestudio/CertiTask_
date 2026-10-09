@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { storage } from "@/lib/storage";
 import { DOCUMENT_RETENTION_DAYS } from "@/lib/verification";
 import { audit } from "@/lib/audit";
+export const maxDuration = 300;
 
 /**
  * GET /api/cron/purge-documents  (Authorization: Bearer $CRON_SECRET)

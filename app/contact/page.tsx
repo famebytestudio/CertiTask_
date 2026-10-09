@@ -1,5 +1,6 @@
 "use client";
 
+import { PageIntro } from "@/components/PageIntro";
 import React, { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/Button";
@@ -87,20 +88,7 @@ export default function ContactPage() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Contact Hero */}
-      <section className="bg-gradient-to-b from-navy-dark to-navy text-paper py-20 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#C9A227_1px,transparent_1px),linear-gradient(to_bottom,#C9A227_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 space-y-6">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold tracking-wider bg-gold/15 text-gold border border-gold/30">
-            Get in Touch
-          </span>
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight">
-            How Can We Help <span className="text-gold">You?</span>
-          </h1>
-          <p className="text-paper/85 text-lg max-w-2xl mx-auto leading-relaxed">
-            Have questions about certificate verification, partner accounts, or opportunities? Send us a message and our team will reply shortly.
-          </p>
-        </div>
-      </section>
+      <PageIntro eyebrow="LET’S TALK" title="A question, an idea," accent="or just a hello." description="Need help with your account, a project, or a certificate? Send us a message. We’re here to help you take the next step."></PageIntro>
 
       {/* Main Section */}
       <section className="py-24 bg-paper text-ink flex-1">

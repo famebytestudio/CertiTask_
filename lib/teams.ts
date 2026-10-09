@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import { background } from "@/lib/background";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { notify } from "@/lib/notifications";
@@ -75,7 +76,7 @@ export async function inviteToTeam(actor: SessionPayload, teamId: string, rawEma
       ? await prisma.teamMember.update({ where: { id: existing.id }, data: { status: "INVITED", invitedById: actor.userId, invitedAt: new Date(), expiresAt: inviteExpiry(), respondedAt: null } })
       : await prisma.teamMember.create({ data: { teamId, userId: user.id, role: "MEMBER", status: "INVITED", invitedById: actor.userId, expiresAt: inviteExpiry() } });
     await notify(user.id, "team.invite", `Team invitation: ${team.name}`, `${actor.name} invited you to join "${team.name}" for "${team.project.title}". Expires in ${INVITE_TTL_DAYS} days.`, "/talent/dashboard?tab=teams");
-    void sendTeamInviteEmail(email, user.name, actor.name, team.name, team.project.title, inviteUrl, true).catch((e) => console.error("invite email failed", e));
+    background("Team invitation email", () => sendTeamInviteEmail(email, user.name, actor.name, team.name, team.project.title, inviteUrl, true));
     await audit(actor, "team.member_invited", "team", teamId, { userId: user.id });
     return { kind: "member" as const, member };
   }
@@ -84,7 +85,7 @@ export async function inviteToTeam(actor: SessionPayload, teamId: string, rawEma
   if (existingInvite) throw new TeamError("That email has already been invited", 409);
   const token = randomBytes(24).toString("hex");
   const invite = await prisma.teamInvite.create({ data: { teamId, email, invitedById: actor.userId, token, expiresAt: inviteExpiry() } });
-  void sendTeamInviteEmail(email, null, actor.name, team.name, team.project.title, `${appUrl()}/auth/signup?invite=${token}`, false).catch((e) => console.error("invite email failed", e));
+  background("Team invitation email", () => sendTeamInviteEmail(email, null, actor.name, team.name, team.project.title, `${appUrl()}/auth/signup?invite=${token}`, false));
   await audit(actor, "team.email_invited", "team", teamId, { email });
   return { kind: "invite" as const, invite };
 }

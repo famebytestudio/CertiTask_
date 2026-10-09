@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { CLIENT_TYPE_LABEL, PROJECT_CATEGORY_LABEL, type ClientType, type ProjectCategory, type VerificationStatus } from "@/lib/enums";
 
 interface TalentDetail {
@@ -17,6 +18,7 @@ interface TalentDetail {
   currentSemester: string | null;
   skills: string[];
   portfolioUrl: string | null;
+  resumeUrl: string | null;
   linkedinUrl: string | null;
   createdAt: string;
   _count: { certificatesEarned: number; teamMemberships: number };
@@ -69,7 +71,7 @@ export default function TalentDetailPage() {
       <section className="bg-gradient-to-b from-navy-dark to-navy text-paper py-16">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-start gap-6 flex-wrap">
-            <div className="h-20 w-20 rounded-full bg-gold flex items-center justify-center text-navy font-bold text-2xl shrink-0">{talent.name.charAt(0).toUpperCase()}</div>
+            <div className="h-20 w-20 rounded-full bg-gold flex items-center justify-center text-navy font-bold text-2xl shrink-0 overflow-hidden">{talent.avatarUrl ? <Image unoptimized src={talent.avatarUrl} width={80} height={80} alt={`${talent.name}'s profile photo`} className="h-full w-full object-cover" /> : talent.name.charAt(0).toUpperCase()}</div>
             <div className="flex-1 min-w-0">
               <h1 className="text-4xl font-bold mb-2 break-words">{talent.name}</h1>
               <div className="flex flex-wrap gap-3 text-paper/90 text-sm items-center">
@@ -142,7 +144,8 @@ export default function TalentDetailPage() {
                 <div className="space-y-3 text-sm">
                   {talent.portfolioUrl && <a href={talent.portfolioUrl} target="_blank" rel="noopener noreferrer" className="block text-gold hover:underline break-all">🌐 Portfolio</a>}
                   {talent.linkedinUrl && <a href={talent.linkedinUrl} target="_blank" rel="noopener noreferrer" className="block text-gold hover:underline">💼 LinkedIn</a>}
-                  {!talent.portfolioUrl && !talent.linkedinUrl && <p className="text-ink/60">No links added.</p>}
+                  {talent.resumeUrl && <a href={talent.resumeUrl} target="_blank" rel="noopener noreferrer" className="block text-gold hover:underline">View resume / CV</a>}
+                  {!talent.portfolioUrl && !talent.linkedinUrl && !talent.resumeUrl && <p className="text-ink/60">No links added.</p>}
                 </div>
               </div>
               <div className="bg-white rounded-xl border border-navy/5 p-6">

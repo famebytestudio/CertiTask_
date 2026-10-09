@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getSession, requireRole } from "@/lib/auth";
 import { isString } from "@/lib/validation";
@@ -125,10 +126,13 @@ export async function PATCH(req: Request, { params }: Params) {
     }
 
     const publishing = data.status === "ACTIVE" && project.status === "DRAFT";
+    if (data.status === "ACTIVE" && (data.deadline instanceof Date ? data.deadline : project.deadline) <= new Date()) {
+      return NextResponse.json({ error: "Set a future deadline before publishing or resuming this project" }, { status: 400 });
+    }
     let updated;
     try {
       updated = await prisma.$transaction(async (tx) => {
-        const u = await tx.project.update({ where: { id }, data, include: projectListInclude });
+        const u = await tx.project.update({ where: { id, status: project.status }, data, include: projectListInclude });
         await audit(auth, data.status ? "project.status_changed" : "project.updated", "project", id, { from: project.status, to: u.status, fields: Object.keys(data) }, tx);
         if (!publishing) return u;
         await consumePost(tx, auth.userId, id);
@@ -136,6 +140,7 @@ export async function PATCH(req: Request, { params }: Params) {
       }, { maxWait: 10_000, timeout: 30_000 });
     } catch (e) {
       if (e instanceof BillingError) return NextResponse.json({ error: e.message, billing: e.code }, { status: e.status });
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") return NextResponse.json({ error: "This project changed. Refresh before trying again." }, { status: 409 });
       throw e;
     }
 

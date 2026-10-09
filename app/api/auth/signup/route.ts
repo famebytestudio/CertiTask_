@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { background } from "@/lib/background";
 import { prisma } from "@/lib/prisma";
 import { hashPassword, createToken, setAuthCookie } from "@/lib/auth";
 import { isEmail, isString } from "@/lib/validation";
@@ -59,7 +60,7 @@ export async function POST(req: Request) {
 
     await audit({ userId: user.id, role: user.role }, "user.signup", "user", user.id, { role: user.role, clientType: dbClientType });
     await sendEmailVerification(user).catch((e) => console.error("signup email verification failed:", e));
-    if (user.role === "TALENT") void attachPendingInvites(user).catch((e) => console.error("attach invites failed", e));
+    if (user.role === "TALENT") background("Attach team invitations", () => attachPendingInvites(user));
 
     const token = await createToken({
       userId: user.id,

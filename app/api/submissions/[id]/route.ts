@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { background } from "@/lib/background";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
 import { isString } from "@/lib/validation";
@@ -68,7 +69,7 @@ export async function PATCH(req: Request, { params }: Params) {
     }, { maxWait: 10_000, timeout: 60_000 }); // remote DB: several sequential round trips
 
     // Email delivery happens after commit and never blocks the response.
-    if (result.issued.length > 0) void deliverCertificates(result.issued);
+    if (result.issued.length > 0) background("Certificate delivery", () => deliverCertificates(result.issued));
 
     return NextResponse.json({ success: true, submission: updated, certificatesIssued: result.issued.length, certificatesHeld: result.held.length });
   } catch (error) {

@@ -40,7 +40,7 @@ export function ReceiptScreen({ receipt, onDone }: Props) {
     <div
       style={{
         minHeight: "100vh",
-        background: "#0D0D0D",
+        background: "var(--navy-dark)",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",

@@ -15,7 +15,7 @@ export function PrinterSlot({ printing }: Props) {
   const [ledOn, setLedOn] = useState(false);
 
   useEffect(() => {
-    if (!printing) { setLedOn(false); return; }
+    if (!printing) return;
     const interval = setInterval(() => setLedOn((v) => !v), 500);
     return () => clearInterval(interval);
   }, [printing]);

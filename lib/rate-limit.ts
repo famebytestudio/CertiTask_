@@ -13,7 +13,7 @@ export function getClientRateLimitKey(req: Request, scope: string, identifier?: 
     req.headers.get("true-client-ip")?.trim() ||
     "unknown";
 
-  const normalizedIdentifier = identifier?.toLowerCase().trim();
+  const normalizedIdentifier = typeof identifier === "string" ? identifier.toLowerCase().trim() : undefined;
   return normalizedIdentifier ? `${scope}:${clientIp}:${normalizedIdentifier}` : `${scope}:${clientIp}`;
 }
 
@@ -22,6 +22,10 @@ function localRateLimited(key: string, limit: number, windowMs: number): boolean
   const current = buckets.get(key);
 
   if (!current || current.resetAt <= now) {
+    if (buckets.size >= 10_000) {
+      for (const [entry, bucket] of buckets) if (bucket.resetAt <= now) buckets.delete(entry);
+      if (buckets.size >= 10_000) return true;
+    }
     buckets.set(key, { count: 1, resetAt: now + windowMs });
     return false;
   }
@@ -53,6 +57,7 @@ export async function isRateLimited(key: string, limit: number, windowMs: number
     const result = await limiter.limit(key);
     return !result.success;
   } catch {
+    if (process.env.NODE_ENV === "production") return true;
     return localRateLimited(key, limit, windowMs);
   }
 }

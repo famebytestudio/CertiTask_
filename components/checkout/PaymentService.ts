@@ -39,16 +39,6 @@ export class SafepayPaymentService implements PaymentService {
   }
 }
 
-/**
- * MockPaymentService — 2-second fake delay, always succeeds instantly.
- */
-export class MockPaymentService implements PaymentService {
-  async pay(_order: Order): Promise<PaymentResult> {
-    await new Promise((r) => setTimeout(r, 2000));
-    return { ok: true, subscriptionId: "mock-sub-id" };
-  }
-}
-
 /** Active service singleton — swap here to change gateway. */
 export function createPaymentService(): PaymentService {
   return new SafepayPaymentService();

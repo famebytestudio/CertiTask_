@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./redesign.css";
+import "./directory-verify.css";
+import "./client-profile.css";
 import LayoutWrapper from "@/components/LayoutWrapper";
 
 export const viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
   viewportFit: "cover",
 };
 

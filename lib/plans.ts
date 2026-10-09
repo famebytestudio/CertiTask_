@@ -10,7 +10,7 @@ export const PERIOD_DAYS = 30;
 
 function price(env: string, fallback: number): number {
   const v = Number(process.env[env]);
-  return Number.isFinite(v) && v > 0 ? v : fallback;
+  return Number.isSafeInteger(v) && v > 0 ? v : fallback;
 }
 
 export interface PlanDef {
@@ -72,13 +72,25 @@ export function formatUsd(cents: number): string {
 /** Public, serialisable view of the plan table for pricing pages. */
 export function planCatalog(audience: "CLIENT" | "TALENT" = "CLIENT") {
   return PLAN_TIERS.map((t) => {
-    const p = PLANS[t];
-    const postLimit = audience === "TALENT" ? p.talentRequestLimit : p.postLimit;
+    const p = planForAudience(t, audience);
+    const postLimit = p.postLimit;
     return { tier: p.tier, name: p.name, tagline: p.tagline, priceCents: p.priceCents, price: formatUsd(p.priceCents), postLimit, perks: p.perks, features: p.features };
   });
 }
 
 export function planForAudience(plan: PlanTier, audience: "CLIENT" | "TALENT") {
   const definition = PLANS[plan];
-  return { ...definition, postLimit: audience === "TALENT" ? definition.talentRequestLimit : definition.postLimit };
+  if (audience === "CLIENT") return definition;
+  return {
+    ...definition,
+    postLimit: definition.talentRequestLimit,
+    tagline: plan === "STARTER" ? "For occasional applications" : plan === "GROWTH" ? "For an active project search" : "For more project opportunities",
+    perks: [
+      `${definition.talentRequestLimit} project requests per 30 days`,
+      "Solo and team applications",
+      "Email and in-app notifications",
+      "Public talent profile and earned certificates",
+    ],
+    features: { applicantFilters: false, priorityVisibility: false, analytics: false, featured: false, prioritySupport: false },
+  };
 }

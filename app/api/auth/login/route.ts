@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword, createToken, setAuthCookie } from "@/lib/auth";
 import { getClientRateLimitKey, isRateLimited } from "@/lib/rate-limit";
+import { isEmail, isString } from "@/lib/validation";
 
 export async function POST(req: Request) {
   try {
@@ -12,7 +13,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Too many login attempts. Try again later." }, { status: 429 });
     }
 
-    if (!email || !password) {
+    if (!isEmail(email) || !isString(password, 128)) {
       return NextResponse.json(
         { error: "Email and password are required." },
         { status: 400 }

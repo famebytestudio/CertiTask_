@@ -1,6 +1,7 @@
 "use client";
 
 import type { PlanTier } from "@/lib/plans";
+import Link from "next/link";
 
 export interface PlanCatalogItem {
   tier: PlanTier; name: string; tagline: string; price: string; priceCents: number; postLimit: number | null; perks: string[];
@@ -15,13 +16,13 @@ export function PlanCards({ plans, current, onChoose, busy, compact, quotaLabel 
 }) {
   const rank: Record<PlanTier, number> = { STARTER: 1, GROWTH: 2, PRO: 3 };
   return (
-    <div className="mobile-dashboard-form-grid" style={{ display: "grid", gridTemplateColumns: `repeat(${plans.length}, 1fr)`, gap: compact ? 12 : 20 }}>
+    <div className="plan-grid mobile-dashboard-form-grid" style={{ display: "grid", gridTemplateColumns: `repeat(${plans.length}, 1fr)`, gap: compact ? 12 : 20 }}>
       {plans.map(p => {
         const isCurrent = current === p.tier;
         const lower = current ? rank[p.tier] < rank[current] : false;
         const highlight = p.tier === "GROWTH";
         return (
-          <div key={p.tier} style={{ border: `2px solid ${isCurrent ? "var(--success)" : highlight ? "var(--gold)" : "var(--border)"}`, borderRadius: 16, padding: compact ? 18 : 24, background: highlight ? "#FFFDF5" : "#fff", position: "relative", display: "flex", flexDirection: "column" }}>
+          <div key={p.tier} className={`plan-card ${highlight ? "plan-highlight" : ""}`} style={{ border: `2px solid ${isCurrent ? "var(--success)" : highlight ? "var(--gold)" : "var(--border)"}`, borderRadius: 16, padding: compact ? 18 : 24, background: highlight ? "#FFFDF5" : "#fff", position: "relative", display: "flex", flexDirection: "column" }}>
             {highlight && !isCurrent && <span style={{ position: "absolute", top: -11, left: 18, fontSize: 10, fontWeight: 800, letterSpacing: 1, textTransform: "uppercase", background: "var(--gold)", color: "var(--navy)", padding: "3px 10px", borderRadius: 10 }}>Most popular</span>}
             {isCurrent && <span style={{ position: "absolute", top: -11, left: 18, fontSize: 10, fontWeight: 800, letterSpacing: 1, textTransform: "uppercase", background: "var(--success)", color: "#fff", padding: "3px 10px", borderRadius: 10 }}>Your plan</span>}
             <div style={{ fontSize: 13, fontWeight: 700, color: "var(--ink-subtle)", textTransform: "uppercase", letterSpacing: 1 }}>{p.name}</div>
@@ -31,10 +32,11 @@ export function PlanCards({ plans, current, onChoose, busy, compact, quotaLabel 
             <ul style={{ listStyle: "none", padding: 0, margin: "0 0 16px", display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
               {p.perks.map(k => <li key={k} style={{ fontSize: 13, color: "var(--ink-muted)", display: "flex", gap: 8 }}><span style={{ color: "var(--success)", fontWeight: 800 }}>✓</span>{quotaLabel === "project request" ? k.replaceAll("project posts", "project requests") : k}</li>)}
             </ul>
+            {!onChoose && <Link href={`/auth/signup?role=${quotaLabel === "project request" ? "talent" : "client"}`} className="ct-button ct-button-dark">Get started with {p.name} ↗</Link>}
             {onChoose && (
-              <button onClick={() => onChoose(p.tier)} disabled={!!busy || isCurrent || lower}
-                style={{ padding: "11px 0", borderRadius: 10, border: "none", fontWeight: 800, fontSize: 14, cursor: busy || isCurrent || lower ? "not-allowed" : "pointer", background: isCurrent ? "#EDF2F7" : highlight ? "var(--gold)" : "var(--navy)", color: isCurrent ? "var(--ink-subtle)" : highlight ? "var(--navy)" : "#fff", opacity: busy && busy !== p.tier ? 0.6 : 1 }}>
-                {busy === p.tier ? "Opening checkout…" : isCurrent ? "Current plan" : lower ? "Available after current period" : current ? `Upgrade to ${p.name}` : `Choose ${p.name}`}
+              <button onClick={() => onChoose(p.tier)} disabled={!!busy || lower}
+                style={{ padding: "11px 0", borderRadius: 10, border: "none", fontWeight: 800, fontSize: 14, cursor: busy || lower ? "not-allowed" : "pointer", background: highlight ? "var(--gold)" : "var(--navy)", color: highlight ? "var(--navy)" : "#fff", opacity: busy && busy !== p.tier ? 0.6 : 1 }}>
+                {busy === p.tier ? "Opening checkout…" : isCurrent ? "Renew plan" : lower ? "Available after current period" : current ? `Upgrade to ${p.name}` : `Choose ${p.name}`}
               </button>
             )}
           </div>

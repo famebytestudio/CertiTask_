@@ -36,7 +36,7 @@ interface Props {
  */
 export function ReceiptPaper({ receipt, animate = false, onPrintComplete }: Props) {
   const [visibleLines, setVisibleLines] = useState(0);
-  const [stampVisible, setStampVisible] = useState(false);
+  const [stampVisible, setStampVisible] = useState(!animate);
   const calledRef = useRef(false);
 
   const lines: ReceiptLine[] = [
@@ -61,18 +61,17 @@ export function ReceiptPaper({ receipt, animate = false, onPrintComplete }: Prop
 
   useEffect(() => {
     if (!animate) {
-      setVisibleLines(lines.length);
-      setTimeout(() => setStampVisible(true), 300);
       return;
     }
 
     let i = 0;
+    let stampTimer: ReturnType<typeof setTimeout> | undefined;
     const interval = setInterval(() => {
       i++;
       setVisibleLines(i);
       if (i >= lines.length) {
         clearInterval(interval);
-        setTimeout(() => {
+        stampTimer = setTimeout(() => {
           setStampVisible(true);
           if (!calledRef.current) {
             calledRef.current = true;
@@ -81,7 +80,7 @@ export function ReceiptPaper({ receipt, animate = false, onPrintComplete }: Prop
         }, 600);
       }
     }, 90);
-    return () => clearInterval(interval);
+    return () => { clearInterval(interval); clearTimeout(stampTimer); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animate]);
 
@@ -106,7 +105,7 @@ export function ReceiptPaper({ receipt, animate = false, onPrintComplete }: Prop
     >
       {/* Barcode area */}
       <div style={{ marginBottom: 16 }}>
-        {lines.slice(0, visibleLines).map((line, i) => {
+        {lines.slice(0, animate ? visibleLines : lines.length).map((line, i) => {
           if (line.spacer) {
             return <div key={i} style={{ height: 6 }} />;
           }

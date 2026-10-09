@@ -19,8 +19,9 @@ export interface PaymentProvider {
 }
 
 function cfg() {
-  const base = (process.env.SAFEPAY_BASE_URL || "https://sandbox.api.getsafepay.com").replace(/\/$/, "");
   const env = process.env.SAFEPAY_ENV || "sandbox";
+  if (env !== "sandbox" && env !== "production") throw new Error("SAFEPAY_ENV must be sandbox or production");
+  const base = (process.env.SAFEPAY_BASE_URL || (env === "production" ? "https://api.getsafepay.com" : "https://sandbox.api.getsafepay.com")).replace(/\/$/, "");
   const publicKey = process.env.SAFEPAY_PUBLIC_KEY;
   const secretKey = process.env.SAFEPAY_SECRET_KEY;
   if (!publicKey || !secretKey) throw new Error("SAFEPAY_PUBLIC_KEY / SAFEPAY_SECRET_KEY are not configured");
@@ -31,6 +32,8 @@ async function call<T>(path: string, init: RequestInit & { secret: string }): Pr
   const { secret, ...rest } = init;
   const res = await fetch(cfg().base + path, {
     ...rest,
+    cache: "no-store",
+    signal: AbortSignal.timeout(15_000),
     headers: { "Content-Type": "application/json", "X-SFPY-MERCHANT-SECRET": secret, ...(rest.headers ?? {}) },
   });
   const text = await res.text();
@@ -83,7 +86,7 @@ export const safepay: PaymentProvider = {
   },
 
   verifyWebhook(rawBody, signatureHeader) {
-    const secret = cfg().webhookSecret;
+    const secret = process.env.SAFEPAY_WEBHOOK_SECRET;
     if (!secret || !signatureHeader) return false;
     const expected = createHmac("sha512", secret).update(rawBody, "utf8").digest("hex");
     const a = Buffer.from(expected, "utf8");

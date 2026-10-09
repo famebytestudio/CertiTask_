@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { background } from "@/lib/background";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
@@ -21,7 +22,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
   const isOwner = session?.role === "CLIENT" && session.userId === project.clientId;
   // Analytics perk: count views by anyone but the owner (best effort, never blocks render).
-  if (!isOwner && project.status === "ACTIVE") void prisma.project.update({ where: { id }, data: { viewCount: { increment: 1 } } }).catch(() => {});
+  if (!isOwner && project.status === "ACTIVE") background("Project view count", () => prisma.project.update({ where: { id }, data: { viewCount: { increment: 1 } } }));
   if (project.status !== "ACTIVE" && !isOwner && session?.role !== "ADMIN") notFound();
 
   const daysLeft = Math.max(0, Math.ceil((project.deadline.getTime() - now.getTime()) / 86_400_000));

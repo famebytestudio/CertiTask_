@@ -21,6 +21,7 @@ export async function GET(_req: Request, { params }: Params) {
         currentSemester: true,
         skills: true,
         portfolioUrl: true,
+        resumeUrl: true,
         linkedinUrl: true,
         createdAt: true,
         _count: { select: { certificatesEarned: true, teamMemberships: true } },

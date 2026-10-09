@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Modal, Notice } from "@/components/dashboard/ui";
 import { PlanCards, type PlanCatalogItem } from "@/components/billing/PlanCards";
 import { goToCheckout } from "@/components/client/BillingTab";
@@ -8,6 +9,7 @@ import type { PlanTier } from "@/lib/plans";
 
 /** Shown when publishing or applying is blocked by billing. */
 export function PlanRequiredModal({ reason, onClose, audience = "client" }: { reason: "PLAN_REQUIRED" | "LIMIT_REACHED"; onClose: () => void; audience?: "client" | "talent" }) {
+  const router = useRouter();
   const [plans, setPlans] = useState<PlanCatalogItem[]>([]);
   const [current, setCurrent] = useState<PlanTier | null>(null);
   const [freePosts, setFreePosts] = useState(2);
@@ -22,7 +24,7 @@ export function PlanRequiredModal({ reason, onClose, audience = "client" }: { re
 
   async function choose(tier: PlanTier) {
     setBusy(tier); setError(null);
-    const err = await goToCheckout(tier);
+    const err = await goToCheckout(tier, router.push);
     if (err) { setError(err); setBusy(null); }
   }
 

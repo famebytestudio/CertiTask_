@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { background } from "@/lib/background";
 import { appUrl } from "@/lib/app-url";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
@@ -91,7 +92,7 @@ export async function PATCH(request: Request, { params }: Params) {
       ]);
       await audit(authorization, "verification.reset", "user", id, { reason: reasonText });
       await notify(id, "verification.rejected", "Verification reset", `An admin reset your verification: ${reasonText} Please submit your documents again.`, `/${target.role === "CLIENT" ? "client" : "talent"}/dashboard?tab=verification`);
-      void sendAccountStatusEmail(target.email, target.name, "VERIFICATION_RESET", reasonText, dashboard).catch(e => console.error("account email failed:", e));
+      background("Account status email", () => sendAccountStatusEmail(target.email, target.name, "VERIFICATION_RESET", reasonText, dashboard));
       return NextResponse.json({ success: true, message: "Verification reset; the user was asked to resubmit" });
     }
 
@@ -106,7 +107,7 @@ export async function PATCH(request: Request, { params }: Params) {
 
     if (typeof suspended === "boolean" && suspended !== Boolean(target.suspendedAt)) {
       await audit(authorization, suspended ? "user.suspended" : "user.unsuspended", "user", id, { reason: reasonText || null });
-      void sendAccountStatusEmail(target.email, target.name, suspended ? "SUSPENDED" : "REINSTATED", reasonText || null, dashboard).catch(e => console.error("account email failed:", e));
+      background("Account status email", () => sendAccountStatusEmail(target.email, target.name, suspended ? "SUSPENDED" : "REINSTATED", reasonText || null, dashboard));
     }
     if (data.name && data.name !== target.name) await audit(authorization, "user.renamed", "user", id, { from: target.name, to: data.name });
 

@@ -90,7 +90,7 @@ export async function getSession(): Promise<SessionPayload | null> {
   // Sliding expiry: extend on activity, throttled so a busy dashboard doesn't write on every request.
   const target = Math.min(now + SESSION_IDLE_SECONDS * 1000, hardEnd);
   if (target - storedSession.expiresAt.getTime() > SESSION_REFRESH_AFTER_SECONDS * 1000) {
-    prisma.session.update({ where: { tokenHash }, data: { expiresAt: new Date(target) } }).catch(() => { /* best effort */ });
+    await prisma.session.updateMany({ where: { tokenHash, revokedAt: null, expiresAt: { gt: new Date(now) } }, data: { expiresAt: new Date(target) } });
   }
 
   if (payload.role === "ADMIN" && payload.userId === "super-admin") return payload;

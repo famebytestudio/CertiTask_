@@ -1,4 +1,6 @@
 import { Prisma } from "@prisma/client";
+import { background } from "@/lib/background";
+import { lockAccount } from "@/lib/account-lock";
 import { prisma } from "@/lib/prisma";
 import { paymentProvider } from "@/lib/payments/safepay";
 import { FREE_POSTS, PERIOD_DAYS, PLANS, PLAN_RANK, formatUsd, planForAudience, type PlanTier } from "@/lib/plans";
@@ -48,7 +50,7 @@ export async function getEntitlement(clientId: string, db: Tx | typeof prisma = 
   const sub = await getActiveSubscription(clientId, db);
   const freePostsLeft = verified ? Math.max(0, FREE_POSTS - user.freePostsUsed) : 0;
   const postsLeftInPeriod = sub ? (sub.postLimit === null ? null : Math.max(0, sub.postLimit - sub.postsUsed)) : 0;
-  const features = sub ? PLANS[sub.plan].features : NO_FEATURES;
+  const features = sub ? planForAudience(sub.plan, role === "TALENT" ? "TALENT" : "CLIENT").features : NO_FEATURES;
 
   if (!verified) return { verified, freePostsUsed: user.freePostsUsed, freePostsLeft: 0, subscription: sub, postsLeftInPeriod, canPost: false, reason: "NOT_VERIFIED", features };
   if (freePostsLeft > 0) return { verified, freePostsUsed: user.freePostsUsed, freePostsLeft, subscription: sub, postsLeftInPeriod, canPost: true, reason: "FREE", features };
@@ -63,6 +65,7 @@ export async function getEntitlement(clientId: string, db: Tx | typeof prisma = 
  * first (lifetime), then the active period's quota.
  */
 export async function consumePost(tx: Tx, clientId: string, projectId: string): Promise<"FREE" | "SUBSCRIPTION"> {
+  await lockAccount(tx, clientId);
   const e = await getEntitlement(clientId, tx, "CLIENT");
   if (e.reason === "NOT_VERIFIED") throw new BillingError("Complete verification before publishing a project", "NOT_VERIFIED", 403);
   if (e.reason === "PLAN_REQUIRED") throw new BillingError(`You've used your ${FREE_POSTS} free project posts. Choose a plan to keep posting.`, "PLAN_REQUIRED");
@@ -79,6 +82,7 @@ export async function consumePost(tx: Tx, clientId: string, projectId: string): 
 
 /** Count one talent project request against the talent's allowance. */
 export async function consumeApplication(tx: Tx, talentId: string): Promise<"FREE" | "SUBSCRIPTION"> {
+  await lockAccount(tx, talentId);
   const e = await getEntitlement(talentId, tx, "TALENT");
   if (e.reason === "NOT_VERIFIED") throw new BillingError("Confirm your email address before applying", "NOT_VERIFIED", 403);
   if (e.reason === "PLAN_REQUIRED") throw new BillingError(`You've used your ${FREE_POSTS} free project requests. Choose a plan to keep applying.`, "PLAN_REQUIRED");
@@ -129,6 +133,7 @@ export async function startCheckout(actor: SessionPayload, plan: PlanTier) {
     });
   } catch (e) {
     await prisma.payment.update({ where: { id: payment.id }, data: { status: "FAILED", providerState: String(e).slice(0, 200) } });
+    await prisma.subscription.update({ where: { id: subscription.id }, data: { status: "CANCELLED", cancelledAt: new Date() } });
     throw new BillingError("The payment provider is unavailable right now. Please try again in a minute.", "PROVIDER", 503);
   }
   await prisma.payment.update({ where: { id: payment.id }, data: { providerRef: checkout.ref } });
@@ -137,6 +142,8 @@ export async function startCheckout(actor: SessionPayload, plan: PlanTier) {
 }
 
 async function nextReceiptNumber(tx: Tx): Promise<string> {
+  // Receipts belong to different accounts, so use one transaction-scoped lock.
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended('certitask:receipts', 0))`;
   const year = new Date().getUTCFullYear();
   // Zero-padded, so the lexically largest number is the numerically largest. Survives deleted rows.
   const last = await tx.payment.findFirst({ where: { receiptNumber: { startsWith: `CT-${year}-` } }, orderBy: { receiptNumber: "desc" }, select: { receiptNumber: true } });
@@ -152,6 +159,7 @@ export async function confirmPayment(paymentId: string, source: "redirect" | "we
   const payment = await prisma.payment.findUnique({ where: { id: paymentId }, include: { subscription: true, client: { select: { id: true, name: true, email: true, role: true } } } });
   if (!payment) throw new BillingError("Payment not found", "INVALID", 404);
   if (payment.status === "SUCCEEDED") return { status: "SUCCEEDED", subscriptionId: payment.subscriptionId };
+  if (payment.status === "REFUNDED") return { status: "REFUNDED", subscriptionId: payment.subscriptionId };
   if (!payment.providerRef) throw new BillingError("Payment was never sent to the provider", "INVALID", 409);
 
   const status = await paymentProvider.fetchStatus(payment.providerRef);
@@ -165,9 +173,11 @@ export async function confirmPayment(paymentId: string, source: "redirect" | "we
   }
 
   const result = await prisma.$transaction(async (tx) => {
+    await lockAccount(tx, payment.clientId);
     // Re-check inside the transaction so redirect + webhook can't both activate.
     const fresh = await tx.payment.findUniqueOrThrow({ where: { id: paymentId } });
     if (fresh.status === "SUCCEEDED") return { status: "SUCCEEDED", subscriptionId: fresh.subscriptionId, alreadyDone: true, receipt: fresh.receiptNumber };
+    if (fresh.status === "REFUNDED") return { status: "REFUNDED", subscriptionId: fresh.subscriptionId, alreadyDone: true, receipt: fresh.receiptNumber };
 
     const receipt = await nextReceiptNumber(tx);
     await tx.payment.update({ where: { id: paymentId }, data: { status: "SUCCEEDED", paidAt: new Date(), receiptNumber: receipt } });
@@ -190,9 +200,9 @@ export async function confirmPayment(paymentId: string, source: "redirect" | "we
     const dashboardUrl = isTalent ? "/talent/dashboard?tab=billing" : "/client/dashboard?tab=billing";
     const unit = isTalent ? "project requests" : "projects";
     await notify(payment.client.id, "billing.activated", `${def.name} plan active`, `Thanks for subscribing. You can use ${def.postLimit ?? "unlimited"} ${unit} in the next ${PERIOD_DAYS} days. Receipt ${result.receipt}.`, dashboardUrl);
-    void sendReceiptEmail(payment.client.email, payment.client.name, def.name, formatUsd(payment.amountCents), result.receipt!, `${appUrl()}${dashboardUrl}`).catch((e) => console.error("receipt email failed", e));
+    background("Receipt email", () => sendReceiptEmail(payment.client.email, payment.client.name, def.name, formatUsd(payment.amountCents), result.receipt!, `${appUrl()}${dashboardUrl}`));
   }
-  return { status: "SUCCEEDED", subscriptionId: result.subscriptionId };
+  return { status: result.status, subscriptionId: result.subscriptionId };
 }
 
 /** Admin marks a payment refunded (after refunding in the Safepay dashboard). Ends the subscription. */
@@ -201,6 +211,9 @@ export async function markRefunded(actor: SessionPayload, paymentId: string, rea
   if (!payment) throw new BillingError("Payment not found", "INVALID", 404);
   if (payment.status !== "SUCCEEDED") throw new BillingError("Only successful payments can be refunded", "INVALID", 409);
   await prisma.$transaction(async (tx) => {
+    await lockAccount(tx, payment.clientId);
+    const fresh = await tx.payment.findUniqueOrThrow({ where: { id: paymentId } });
+    if (fresh.status !== "SUCCEEDED") throw new BillingError("Only successful payments can be refunded", "INVALID", 409);
     await tx.payment.update({ where: { id: paymentId }, data: { status: "REFUNDED", refundedAt: new Date(), refundReason: reason } });
     if (payment.subscriptionId) await tx.subscription.update({ where: { id: payment.subscriptionId }, data: { status: "CANCELLED", cancelledAt: new Date(), periodEnd: new Date() } });
     await audit(actor, "billing.refunded", "payment", paymentId, { reason }, tx);

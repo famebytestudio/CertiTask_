@@ -1,8 +1,10 @@
 import { jwtVerify, SignJWT } from "jose";
 
-const jwtSecret = process.env.JWT_SECRET;
-if (!jwtSecret) throw new Error("JWT_SECRET is not configured");
-const JWT_SECRET = new TextEncoder().encode(jwtSecret);
+function signingKey(): Uint8Array {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error("JWT_SECRET is not configured");
+  return new TextEncoder().encode(secret);
+}
 
 /**
  * Sessions slide: each request past the refresh threshold pushes the DB
@@ -27,12 +29,12 @@ export async function signToken(payload: SessionPayload): Promise<string> {
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(`${SESSION_MAX_SECONDS}s`)
-    .sign(JWT_SECRET);
+    .sign(signingKey());
 }
 
 export async function verifyToken(token: string): Promise<SessionPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, JWT_SECRET, { algorithms: ["HS256"] });
+    const { payload } = await jwtVerify(token, signingKey(), { algorithms: ["HS256"] });
     if (
       typeof payload.userId !== "string" ||
       typeof payload.email !== "string" ||

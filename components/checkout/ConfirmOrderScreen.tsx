@@ -53,14 +53,14 @@ export function ConfirmOrderScreen({
   }, [paymentService, order, onSuccess, onError]);
 
   const planColors: Record<string, { bg: string; accent: string }> = {
-    STARTER: { bg: "linear-gradient(135deg,#1E3A5F 0%,#2D5016 100%)", accent: "#4ADE80" },
-    GROWTH:  { bg: "linear-gradient(135deg,#0F2A4A 0%,#7C4A1A 100%)", accent: "#C9A227" },
-    PRO:     { bg: "linear-gradient(135deg,#0A1D33 0%,#1A0A33 100%)", accent: "#A78BFA" },
+    STARTER: { bg: "linear-gradient(135deg,#0F2A4A 0%,#25496a 100%)", accent: "#F1E3B4" },
+    GROWTH:  { bg: "linear-gradient(135deg,#0F2A4A 0%,#4e4630 100%)", accent: "#C9A227" },
+    PRO:     { bg: "linear-gradient(135deg,#0A1D33 0%,#293c53 100%)", accent: "#e0c675" },
   };
   const colors = planColors[order.plan] ?? planColors.GROWTH;
 
   return (
-    <div
+    <div className="checkout-surface"
       style={{
         minHeight: "100vh",
         background: "#F4F3F1",

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { background } from "@/lib/background";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { isString } from "@/lib/validation";
@@ -58,8 +59,8 @@ export async function PATCH(req: Request, { params }: Params) {
       return approved && request.user.role === "TALENT" ? await releaseHeldCertificates(tx, authorization, request.userId) : [];
     }, { maxWait: 10_000, timeout: 60_000 });
 
-    if (released.length > 0) void deliverCertificates(released);
-    void sendVerificationDecisionEmail(request.user.email, request.user.name, approved, approved ? null : String(reason).trim(), `${appUrl()}/${request.user.role.toLowerCase()}/dashboard?tab=verification`).catch((e) => console.error("decision email failed", e));
+    if (released.length > 0) background("Certificate delivery", () => deliverCertificates(released));
+    background("Verification decision email", () => sendVerificationDecisionEmail(request.user.email, request.user.name, approved, approved ? null : String(reason).trim(), `${appUrl()}/${request.user.role.toLowerCase()}/dashboard?tab=verification`));
 
     return NextResponse.json({ success: true, status: approved ? "VERIFIED" : "REJECTED", certificatesReleased: released.length });
   } catch (error) {

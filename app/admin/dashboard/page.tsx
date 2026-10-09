@@ -89,7 +89,7 @@ function AdminShell() {
   );
 
   return (
-    <div className="flex min-h-screen bg-paper">
+    <div className="admin-workspace flex min-h-screen bg-paper">
       {/* Sidebar (desktop) */}
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col bg-navy text-white lg:flex">
         <div className="flex items-center gap-3 border-b border-white/10 px-5 py-4">

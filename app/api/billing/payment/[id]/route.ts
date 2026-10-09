@@ -18,7 +18,7 @@ export async function GET(_req: Request, { params }: Params) {
   const p = await prisma.payment.findUnique({
     where: { id },
     include: {
-      client: { select: { name: true, legalName: true, email: true } },
+      client: { select: { name: true, legalName: true, role: true } },
       subscription: { select: { periodStart: true, periodEnd: true } },
     },
   });
@@ -31,6 +31,7 @@ export async function GET(_req: Request, { params }: Params) {
 
   return NextResponse.json({
     id: p.id,
+    audience: p.client.role === "TALENT" ? "talent" : "client",
     plan: p.plan,
     planName: planDef?.name ?? "Plan",
     amountCents: p.amountCents,

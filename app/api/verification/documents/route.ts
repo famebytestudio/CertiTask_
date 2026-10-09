@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
 import { isRateLimited } from "@/lib/rate-limit";
 import { ALLOWED_DOCUMENT_TYPES, MAX_DOCUMENT_BYTES, detectMimeType, storage } from "@/lib/storage";
+import { DOCUMENT_SIZE_LABEL } from "@/lib/upload-limits";
 
 const DOC_TYPES = new Set(["ID_FRONT", "ID_BACK", "ORG_REGISTRATION", "OTHER"]);
 
@@ -25,7 +26,8 @@ export async function POST(req: Request) {
     const type = String(form.get("type") ?? "");
     if (!(file instanceof File)) return NextResponse.json({ error: "Choose a file to upload" }, { status: 400 });
     if (!DOC_TYPES.has(type)) return NextResponse.json({ error: "Unknown document type" }, { status: 400 });
-    if (file.size > MAX_DOCUMENT_BYTES) return NextResponse.json({ error: "File is larger than 5 MB" }, { status: 413 });
+    if (file.size === 0) return NextResponse.json({ error: "Choose a non-empty file" }, { status: 400 });
+    if (file.size > MAX_DOCUMENT_BYTES) return NextResponse.json({ error: `File is larger than ${DOCUMENT_SIZE_LABEL}` }, { status: 413 });
 
     const data = Buffer.from(await file.arrayBuffer());
     const mimeType = detectMimeType(data);
@@ -34,10 +36,16 @@ export async function POST(req: Request) {
     }
 
     const storageKey = await storage.put(data, mimeType);
-    const doc = await prisma.document.create({
+    let doc;
+    try {
+      doc = await prisma.document.create({
       data: { userId: auth.userId, type: type as "ID_FRONT" | "ID_BACK" | "ORG_REGISTRATION" | "OTHER", storageKey, mimeType, sizeBytes: data.byteLength },
       select: { id: true, type: true, mimeType: true, sizeBytes: true, createdAt: true },
-    });
+      });
+    } catch (error) {
+      await storage.delete(storageKey);
+      throw error;
+    }
     return NextResponse.json({ success: true, document: doc });
   } catch (error) {
     console.error("Document upload error:", error);

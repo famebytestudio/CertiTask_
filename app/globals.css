@@ -21,7 +21,7 @@
   --paper:        #FAF9F6;
   --ink:          #1E2530;
   --ink-muted:    #4A5568;
-  --ink-subtle:   #8A97A8;
+  --ink-subtle:   #68778b;
   --surface:      #FFFFFF;
   --border:       #E2E8F0;
   --border-navy:  rgba(201, 162, 39, 0.25);
@@ -222,6 +222,10 @@ img, svg, video, canvas, iframe {
   .mobile-dashboard-actions-wrap {
     flex-wrap: wrap !important;
   }
+
+  .mobile-bottom-nav-dock {
+    display: flex !important;
+  }
 }
 
 @media (max-width: 480px) {
@@ -293,6 +297,26 @@ img, svg, video, canvas, iframe {
   50%  { opacity: 1; transform: scale(1.05); }
   70%  { transform: scale(0.9); }
   100% { transform: scale(1); }
+}
+
+@keyframes spin-reverse {
+  from { transform: rotate(360deg); }
+  to   { transform: rotate(0deg); }
+}
+
+@keyframes pulse-slow {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50%      { transform: scale(1.06); opacity: 1; }
+}
+
+@keyframes shimmer-bar {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-6px); }
 }
 
 @keyframes otp-enter {

@@ -18,6 +18,9 @@ function transporter() {
     host: process.env.SMTP_HOST,
     port,
     secure: port === 465,
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 20_000,
     auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
   });
 }
@@ -30,6 +33,7 @@ const FROM = () => process.env.EMAIL_FROM || process.env.SMTP_USER || "no-reply@
  */
 export async function sendEmail(opts: SendOptions): Promise<{ sent: boolean }> {
   if (!isSmtpConfigured()) {
+    if (process.env.NODE_ENV === "production") throw new Error("SMTP is not configured");
     console.log(`\n[email:dev] To: ${opts.to}\n[email:dev] Subject: ${opts.subject}\n${opts.text}\n`);
     return { sent: false };
   }

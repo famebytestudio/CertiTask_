@@ -101,7 +101,7 @@ export function SectionHeader({ icon, title, subtitle, action }: { icon: string;
 /* ── Empty state ── */
 export function EmptyState({ icon, title, hint, action }: { icon: string; title: string; hint?: string; action?: ReactNode }) {
   return (
-    <div style={{ textAlign: "center", padding: "60px 0", color: "var(--ink-subtle)" }}>
+    <div className="workspace-empty" style={{ textAlign: "center", padding: "60px 0", color: "var(--ink-subtle)" }}>
       <div style={{ fontSize: 48, marginBottom: 12 }}>{icon}</div>
       <div style={{ fontWeight: 600, marginBottom: 6, color: "var(--ink-muted)" }}>{title}</div>
       {hint && <div style={{ fontSize: 13, marginBottom: 16 }}>{hint}</div>}
@@ -113,7 +113,7 @@ export function EmptyState({ icon, title, hint, action }: { icon: string; title:
 /* ── Card ── */
 export function Card({ children, style, accent }: { children: ReactNode; style?: CSSProperties; accent?: boolean }) {
   return (
-    <div style={{ border: `1px solid ${accent ? "rgba(201,162,39,0.25)" : "var(--border)"}`, borderRadius: 14, padding: 22, background: accent ? "linear-gradient(135deg, #FFFDF5 0%, #FFFBEB 100%)" : "#FAFAFA", ...style }}>
+    <div className="workspace-card" style={{ border: `1px solid ${accent ? "rgba(201,162,39,0.25)" : "var(--border)"}`, borderRadius: 14, padding: 22, background: accent ? "linear-gradient(135deg, #FFFDF5 0%, #FFFBEB 100%)" : "#FAFAFA", ...style }}>
       {children}
     </div>
   );

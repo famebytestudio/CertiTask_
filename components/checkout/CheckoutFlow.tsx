@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import type { Order, Receipt } from "./models";
 import type { PaymentService } from "./PaymentService";
 import { ConfirmOrderScreen } from "./ConfirmOrderScreen";
@@ -43,27 +43,7 @@ export function CheckoutFlow({
   initialStep = "confirm",
 }: Props) {
   const [step, setStep] = useState<CheckoutStep>(initialStep);
-  const [receipt, setReceipt] = useState<Receipt | undefined>(initialReceipt);
-
-  // Build a receipt from the order when payment succeeds (before server data arrives).
-  const builtReceipt: Receipt = useMemo(
-    () =>
-      receipt ?? {
-        receiptNo: `CT-${new Date().getUTCFullYear()}-000000`,
-        cardholder: "Cardholder",
-        paymentMethod: "Safepay",
-        status: "PAID",
-        paymentId: order.id,
-        plan: order.plan,
-        planName: order.planName,
-        total: order.total,
-        currency: order.currency,
-        paidAt: new Date().toISOString(),
-        periodStart: null,
-        periodEnd: null,
-      },
-    [receipt, order]
-  );
+  const receipt = initialReceipt;
 
   const handleSuccess = () => {
     setStep("placed");
@@ -89,17 +69,16 @@ export function CheckoutFlow({
   }
 
   if (step === "placed") {
+    if (!receipt) return <p role="status">Waiting for a verified payment receipt. <button onClick={onComplete}>Check billing</button></p>;
     return (
       <OrderPlacedScreen
         order={order}
-        receipt={builtReceipt}
+        receipt={receipt}
         onViewReceipt={handleViewReceipt}
         onDone={handleDone}
       />
     );
   }
 
-  return (
-    <ReceiptScreen receipt={builtReceipt} onDone={handleDone} />
-  );
+  return receipt ? <ReceiptScreen receipt={receipt} onDone={handleDone} /> : <p role="status">Receipt unavailable. <button onClick={onComplete}>Check billing</button></p>;
 }

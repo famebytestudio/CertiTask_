@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  outputFileTracingIncludes: {
+    "/api/certificates/[id]/pdf": ["./public/signature.png"],
+    "/api/submissions/[id]": ["./public/signature.png"],
+    "/api/admin/verifications/[id]": ["./public/signature.png"],
+  },
   // Old role URLs from before the Client/Talent rename.
   async redirects() {
     return [
