@@ -62,7 +62,8 @@ export default function AdminLoginPage() {
         return;
       }
 
-      router.push("/admin/dashboard");
+      // Login is a completed flow, not a page the user should return to.
+      router.replace("/admin/dashboard");
       router.refresh();
     } catch {
       setError("An error occurred during sign in. Please try again.");
@@ -93,7 +94,7 @@ export default function AdminLoginPage() {
           <div className="mt-16 grid max-w-md grid-cols-2 gap-3">
             {["Platform oversight", "Verified credentials", "Secure operations", "Audit-ready records"].map((item) => (
               <div key={item} className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-xs font-semibold text-paper/70">
-                <span className="mr-2 text-gold">✦</span>{item}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2 inline h-3.5 w-3.5 text-gold" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>{item}
               </div>
             ))}
           </div>

@@ -55,7 +55,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               {project.client.verificationStatus === "VERIFIED" ? "✓ Verified client" : "Unverified client"}
             </span>
             <span className="px-2 py-0.5 rounded text-xs font-bold bg-white/10">{statusLabel(project.status)}</span>
-            {project.featured && <span className="px-2 py-0.5 rounded text-xs font-bold bg-gold text-navy">★ Featured</span>}
+            {project.featured && <span className="px-2 py-0.5 rounded text-xs font-bold bg-gold text-navy">Featured</span>}
           </div>
         </div>
       </section>

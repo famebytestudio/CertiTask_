@@ -337,7 +337,7 @@ export function ProjectsTab({
                             textTransform: "uppercase",
                           }}
                         >
-                          ★ Featured
+                          Featured
                         </span>
                       )}
                     </div>

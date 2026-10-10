@@ -262,7 +262,7 @@ export function ProjectsTab({
                             textTransform: "uppercase",
                           }}
                         >
-                          ★ Featured
+                          Featured
                         </span>
                       )}
                     </div>
@@ -282,7 +282,7 @@ export function ProjectsTab({
 
                     {p.status === "ACTIVE" && features?.featured && (
                       <Btn variant="ghost" small disabled={busy} onClick={() => toggleFeatured(p)}>
-                        {p.featured ? "Unfeature" : "★ Feature"}
+                        {p.featured ? "Unfeature" : "Feature"}
                       </Btn>
                     )}
 

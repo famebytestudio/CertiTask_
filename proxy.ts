@@ -25,7 +25,12 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(new URL("/admin/login", req.url));
   }
 
-  const isLoginRoute = matchesPath(pathname, "/auth/login");
+  const isGuestOnlyAuthRoute = [
+    "/auth/login",
+    "/auth/signup",
+    "/auth/forgot-password",
+  ].some(route => matchesPath(pathname, route));
+  const isAdminLoginRoute = matchesPath(pathname, "/admin/login");
 
   const isClientRoute = matchesPath(pathname, "/client");
   const isTalentRoute = matchesPath(pathname, "/talent");
@@ -59,8 +64,9 @@ export async function proxy(req: NextRequest) {
     }
   }
 
-  /* 2. Authenticated user visiting auth pages -> redirect to proper dashboard */
-  if (sessionPayload && isLoginRoute) {
+  /* 2. Authenticated users must not re-enter completed guest auth flows. This
+     also makes browser Back after login resolve to the active dashboard. */
+  if (sessionPayload && (isGuestOnlyAuthRoute || (isAdminLoginRoute && sessionPayload.role === "ADMIN"))) {
     let dest = "/talent/dashboard";
     if (sessionPayload.role === "ADMIN") dest = "/admin/dashboard";
     else if (sessionPayload.role === "CLIENT") dest = "/client/dashboard";

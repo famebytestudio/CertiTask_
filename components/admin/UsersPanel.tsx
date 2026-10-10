@@ -169,7 +169,7 @@ export function UserDrawer({ id, onClose, onChanged }: { id: string | null; onCl
             <div className="min-w-0 text-sm text-slate-600">
               <div>Joined {fmtDate(u.createdAt)} · {d!.activeSessions} active session{d!.activeSessions === 1 ? "" : "s"}</div>
               <div className="mt-0.5 flex flex-wrap gap-2 text-xs">
-                <Link href={u.role === "CLIENT" ? `/clients/${u.id}` : `/talents/${u.id}`} target="_blank" className="font-semibold text-sky-700 hover:underline">Public profile ↗</Link>
+                <Link href={u.role === "CLIENT" ? `/clients/${u.id}` : `/talents/${u.id}`} target="_blank" className="inline-flex items-center gap-1 font-semibold text-sky-700 hover:underline">Public profile <Icon name="external" className="h-3.5 w-3.5" /></Link>
                 <a href={`mailto:${u.email}`} className="font-semibold text-sky-700 hover:underline">Email</a>
               </div>
             </div>

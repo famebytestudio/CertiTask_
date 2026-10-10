@@ -133,7 +133,7 @@ function ProjectDrawer({ id, onClose, onChanged, openUser }: { id: string | null
                       <span><span className="font-semibold text-navy">{t.name}</span> <span className="text-xs text-slate-500">· lead <button onClick={() => openUser(t.lead.id)} className="text-sky-700 hover:underline">{t.lead.name}</button> · {t._count.members} member{t._count.members === 1 ? "" : "s"}</span></span>
                       {t.application ? <StatusBadge status={t.application.status} /> : <Badge>No application</Badge>}
                     </div>
-                    {t.submission && <div className="mt-1 flex items-center justify-between gap-2 text-xs text-slate-600"><span>Submission {fmtDateTime(t.submission.createdAt)} · <a href={t.submission.submissionUrl} target="_blank" rel="noreferrer" className="text-sky-700 hover:underline">open deliverable ↗</a></span><StatusBadge status={t.submission.status} /></div>}
+                    {t.submission && <div className="mt-1 flex items-center justify-between gap-2 text-xs text-slate-600"><span>Submission {fmtDateTime(t.submission.createdAt)} · <a href={t.submission.submissionUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-0.5 text-sky-700 hover:underline">open deliverable <Icon name="external" className="h-3 w-3" /></a></span><StatusBadge status={t.submission.status} /></div>}
                   </li>
                 ))}
               </ul>

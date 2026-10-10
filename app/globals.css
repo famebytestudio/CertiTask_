@@ -1151,6 +1151,27 @@ img, svg, video, canvas, iframe {
   background: var(--border);
 }
 
+.google-auth-button {
+  width: 100%;
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  padding: 10px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: #fff;
+  color: var(--navy);
+  font: 700 14px/1 'Inter', sans-serif;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.google-auth-button svg { width: 19px; height: 19px; flex: none; }
+.google-auth-button:hover { border-color: #aeb8c5; background: #f8fafc; box-shadow: 0 4px 14px rgba(15, 42, 74, .08); }
+.google-auth-button:focus-visible { outline: 3px solid color-mix(in srgb, var(--gold) 45%, transparent); outline-offset: 2px; }
+
 /* ─── Spinner ────────────────────────────────────────────────── */
 .spinner {
   width: 18px;

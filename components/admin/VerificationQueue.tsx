@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Badge, Button, Chips, EmptyState, KeyValue, LoadingRows, PageHeader, Row, SearchInput, Select, StatusBadge, Table, Td, Th, Toolbar, adminApi, fmtDateTime, useConfirm, useDebounced, useToast } from "./ui";
+import { Badge, Button, Chips, EmptyState, Icon, KeyValue, LoadingRows, PageHeader, Row, SearchInput, Select, StatusBadge, Table, Td, Th, Toolbar, adminApi, fmtDateTime, useConfirm, useDebounced, useToast } from "./ui";
 
 interface Doc { id: string; type: string; mimeType: string; sizeBytes: number; createdAt: string }
 interface Req {
@@ -122,7 +122,7 @@ export function VerificationQueue({ query, setQuery, onDecided, openUser }: { qu
                     <div key={d.id} className="overflow-hidden rounded-lg ring-1 ring-slate-200">
                       <div className="flex items-center justify-between bg-slate-50 px-3 py-2 text-xs">
                         <span className="font-bold text-navy">{DOC_LABEL[d.type] ?? d.type}</span>
-                        <span className="text-slate-500">{d.sizeBytes < 1024 ? "<1" : Math.round(d.sizeBytes / 1024)} KB · <a href={`/api/verification/documents/${d.id}`} target="_blank" rel="noopener noreferrer" className="font-semibold text-sky-700 hover:underline">open in new tab ↗</a></span>
+                        <span className="text-slate-500">{d.sizeBytes < 1024 ? "<1" : Math.round(d.sizeBytes / 1024)} KB · <a href={`/api/verification/documents/${d.id}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 font-semibold text-sky-700 hover:underline">open in new tab <Icon name="external" className="h-3 w-3" /></a></span>
                       </div>
                       {d.mimeType === "application/pdf"
                         ? <iframe src={`/api/verification/documents/${d.id}`} title={DOC_LABEL[d.type]} className="h-[420px] w-full bg-white" />

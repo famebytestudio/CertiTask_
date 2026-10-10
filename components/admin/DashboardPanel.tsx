@@ -44,12 +44,12 @@ export function DashboardPanel({ goTo, openUser }: { goTo: (tab: AdminTab, query
 
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-        <StatCard label="Clients" value={c.clients} tone="navy" onClick={() => goTo("users", { role: "CLIENT" })} />
-        <StatCard label="Talent" value={c.talents} tone="navy" onClick={() => goTo("users", { role: "TALENT" })} />
-        <StatCard label="Active projects" value={c.activeProjects} hint={`${c.projects} total`} tone="gold" onClick={() => goTo("projects", { status: "ACTIVE" })} />
-        <StatCard label="Revenue this month" value={usd(c.revenueMonthCents)} hint={`${c.paidCountMonth} payment${c.paidCountMonth === 1 ? "" : "s"} · ${usd(c.revenueCents)} all time`} tone="success" onClick={() => goTo("payments")} />
-        <StatCard label="Active plans" value={c.activeSubscriptions} hint={c.failedPayments ? `${c.failedPayments} failed this week` : "no failures this week"} tone={c.failedPayments ? "warning" : "success"} onClick={() => goTo("payments")} />
-        <StatCard label="Certificates" value={c.certificatesIssued} hint={`${c.certificatesDisputed} disputed · ${c.certificatesRevoked} revoked`} tone={c.certificatesDisputed ? "warning" : "navy"} onClick={() => goTo("certificates")} />
+        <StatCard label="Clients" value={c.clients} icon="building" tone="navy" onClick={() => goTo("users", { role: "CLIENT" })} />
+        <StatCard label="Talent" value={c.talents} icon="users" tone="navy" onClick={() => goTo("users", { role: "TALENT" })} />
+        <StatCard label="Active projects" value={c.activeProjects} icon="briefcase" hint={`${c.projects} total`} tone="gold" onClick={() => goTo("projects", { status: "ACTIVE" })} />
+        <StatCard label="Revenue this month" value={usd(c.revenueMonthCents)} icon="trend" hint={`${c.paidCountMonth} payment${c.paidCountMonth === 1 ? "" : "s"} · ${usd(c.revenueCents)} all time`} tone="success" onClick={() => goTo("payments")} />
+        <StatCard label="Active plans" value={c.activeSubscriptions} icon="card" hint={c.failedPayments ? `${c.failedPayments} failed this week` : "no failures this week"} tone={c.failedPayments ? "warning" : "success"} onClick={() => goTo("payments")} />
+        <StatCard label="Certificates" value={c.certificatesIssued} icon="certificate" hint={`${c.certificatesDisputed} disputed · ${c.certificatesRevoked} revoked`} tone={c.certificatesDisputed ? "warning" : "navy"} onClick={() => goTo("certificates")} />
       </div>
 
       <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-3">
@@ -135,7 +135,7 @@ export function DashboardPanel({ goTo, openUser }: { goTo: (tab: AdminTab, query
                   <span className={`h-2 w-2 shrink-0 rounded-full ${/revoked|rejected|deleted|suspended|mismatch/.test(r.action) ? "bg-red-500" : /approved|issued|activated|verified/.test(r.action) ? "bg-emerald-500" : "bg-slate-300"}`} />
                   <span className="min-w-0 flex-1 truncate">
                     <span className="font-semibold text-navy">{r.actorName}</span> <span className="text-slate-600">{r.label.toLowerCase()}</span>
-                    {r.entityType === "user" ? <button onClick={() => openUser(r.entityId)} className="ml-1 text-xs font-semibold text-sky-700 hover:underline">view account</button> : r.entityType === "project" ? <Link href={`/projects/${r.entityId}`} target="_blank" className="ml-1 text-xs font-semibold text-sky-700 hover:underline">open project ↗</Link> : null}
+                    {r.entityType === "user" ? <button onClick={() => openUser(r.entityId)} className="ml-1 text-xs font-semibold text-sky-700 hover:underline">view account</button> : r.entityType === "project" ? <Link href={`/projects/${r.entityId}`} target="_blank" className="ml-1 inline-flex items-center gap-0.5 text-xs font-semibold text-sky-700 hover:underline">open project <Icon name="external" className="h-3 w-3" /></Link> : null}
                     {r.metadata && typeof r.metadata.title === "string" && <span className="ml-1 text-slate-400">· {r.metadata.title as string}</span>}
                   </span>
                   <span className="shrink-0 text-xs text-slate-400" title={fmtDate(r.createdAt)}>{relTime(r.createdAt)}</span>

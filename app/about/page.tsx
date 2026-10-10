@@ -18,6 +18,6 @@ export default function AboutPage() {
       ["Recognition with evidence", "Certificates reflect client-approved project outcomes. Each has a unique identity and a public verification record."],
       ["Progress at your pace", "Whether you’re a student, freelancer, or changing careers, you can start with the skills you have today."],
     ].map(([title,copy])=><article key={title}><h3>{title}</h3><p>{copy}</p></article>)}</div></Reveal></section>
-    <section className="ct-container home-section"><Reveal className="home-cta"><div><p className="eyebrow">YOUR STORY IS STILL BEING WRITTEN</p><h2>Make the next chapter<br /><span className="hero-serif">one worth sharing.</span></h2><Link href="/projects" className="ct-button ct-button-dark">Explore the possibilities ↗</Link></div><span className="cta-flower" aria-hidden="true">✳</span></Reveal></section>
+    <section className="ct-container home-section"><Reveal className="home-cta"><div><p className="eyebrow">YOUR STORY IS STILL BEING WRITTEN</p><h2>Make the next chapter<br /><span className="hero-serif">one worth sharing.</span></h2><Link href="/projects" className="ct-button ct-button-dark">Explore the possibilities ↗</Link></div></Reveal></section>
   </div>;
 }

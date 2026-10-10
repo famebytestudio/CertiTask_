@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 
 /* ── Icons ──────────────────────────────────────────────────────── */
 function UserIcon() {
@@ -227,6 +228,11 @@ export default function SignupPage() {
                 </button>
               </div>
             )}
+
+            <div className="mt-5">
+              <GoogleAuthButton intent="signup" role={role} clientType={clientType} />
+              <div className="auth-divider">or use email</div>
+            </div>
 
             <form onSubmit={handleSubmit} noValidate>
               {/* General error */}

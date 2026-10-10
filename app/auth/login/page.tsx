@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 
 /* ── SVG Icons ─────────────────────────────────────────────────── */
 function MailIcon() {
@@ -61,6 +62,20 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get("oauthError");
+    if (!code) return;
+    const messages: Record<string, string> = {
+      not_configured: "Google sign-in is not configured yet.",
+      cancelled: "Google sign-in was cancelled.",
+      invalid_state: "The Google sign-in request expired. Please try again.",
+      account_missing: "No account uses that Google email. Create an account first.",
+      suspended: "This account has been suspended.",
+    };
+    const timer = window.setTimeout(() => setError(messages[code] ?? "Google sign-in could not be completed. Please try again."), 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -84,9 +99,11 @@ export default function LoginPage() {
       // Redirect based on user role from Neon DB or selected tab
       const destRole = data.user?.role || role;
       const next = new URLSearchParams(window.location.search).get("next");
-      if (destRole === "admin") router.push("/admin/dashboard");
-      else if (next && next.startsWith("/") && !next.startsWith("//")) router.push(next);
-      else router.push(destRole === "talent" ? "/talent/dashboard" : "/client/dashboard");
+      // A successful sign-in ends the guest flow. Replace its history entry so
+      // the browser Back button cannot return to a stale login form.
+      if (destRole === "admin") router.replace("/admin/dashboard");
+      else if (next && next.startsWith("/") && !next.startsWith("//")) router.replace(next);
+      else router.replace(destRole === "talent" ? "/talent/dashboard" : "/client/dashboard");
       router.refresh();
     } catch {
       setError("An error occurred during sign in. Please try again.");
@@ -186,6 +203,9 @@ export default function LoginPage() {
                 Talent
               </button>
             </div>
+
+            <GoogleAuthButton intent="signin" />
+            <div className="auth-divider">or use email</div>
 
             <form onSubmit={handleSubmit} noValidate>
               {/* Email */}

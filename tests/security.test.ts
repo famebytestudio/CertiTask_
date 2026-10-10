@@ -8,6 +8,7 @@ import { safepay } from "../lib/payments/safepay";
 import { signToken, verifyToken } from "../lib/auth-token";
 import { detectMimeType } from "../lib/storage";
 import { COOKIE_NAME } from "../lib/auth-constants";
+import { safeNext } from "../lib/google-oauth";
 
 const savedEnv = { ...process.env };
 afterEach(() => { for (const key of Object.keys(process.env)) if (!(key in savedEnv)) delete process.env[key]; Object.assign(process.env, savedEnv); });
@@ -65,4 +66,13 @@ test("File validation rejects a disguised executable and recognizes supported fi
   assert.equal(detectMimeType(Buffer.from("%PDF-1.7\ncontent")), "application/pdf");
   assert.equal(detectMimeType(Buffer.from([0xff, 0xd8, 0xff, ...Array(9).fill(0)])), "image/jpeg");
   assert.equal(detectMimeType(Buffer.from("RIFF0000WEBPcontent")), "image/webp");
+});
+
+test("Google OAuth return paths stay local and outside authentication routes", () => {
+  assert.equal(safeNext("/projects/example?apply=1"), "/projects/example?apply=1");
+  assert.equal(safeNext("https://evil.test"), null);
+  assert.equal(safeNext("//evil.test"), null);
+  assert.equal(safeNext("/\\evil.test"), null);
+  assert.equal(safeNext("/auth/login"), null);
+  assert.equal(safeNext("/admin/dashboard"), null);
 });

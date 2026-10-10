@@ -48,6 +48,10 @@ const PATHS: Record<string, string> = {
   ban: "M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636",
   user: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",
   building: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4",
+  shield: "M12 3l7 3v5c0 4.4-2.8 7.5-7 10-4.2-2.5-7-5.6-7-10V6l7-3zm-3 9l2 2 4-4",
+  bell: "M18 8a6 6 0 00-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9m-8 12h4",
+  trend: "M3 17l6-6 4 4 8-9m-5 0h5v5",
+  briefcase: "M9 6V4h6v2m-9 0h12a2 2 0 012 2v9a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2zm-2 5h16M10 11v2h4v-2",
 };
 export function Icon({ name, className = "w-5 h-5" }: { name: keyof typeof PATHS | string; className?: string }) {
   return (
@@ -127,17 +131,19 @@ export function PageHeader({ title, subtitle, actions }: { title: string; subtit
     </div>
   );
 }
-export function StatCard({ label, value, hint, tone = "navy", onClick }: { label: string; value: ReactNode; hint?: ReactNode; tone?: "navy" | "gold" | "success" | "warning" | "danger"; onClick?: () => void }) {
-  const accent = { navy: "bg-navy", gold: "bg-gold", success: "bg-emerald-500", warning: "bg-amber-500", danger: "bg-red-500" }[tone];
+export function StatCard({ label, value, hint, tone = "navy", icon, onClick }: { label: string; value: ReactNode; hint?: ReactNode; tone?: "navy" | "gold" | "success" | "warning" | "danger"; icon?: string; onClick?: () => void }) {
+  const iconTone = { navy: "bg-navy/8 text-navy", gold: "bg-amber-50 text-amber-700", success: "bg-emerald-50 text-emerald-700", warning: "bg-orange-50 text-orange-700", danger: "bg-red-50 text-red-700" }[tone];
   const Comp = onClick ? "button" : "div";
   return (
-    <Comp onClick={onClick} className={`relative overflow-hidden rounded-xl bg-white p-4 text-left ring-1 ring-slate-200/80 shadow-[0_1px_2px_rgba(15,42,74,0.05)] ${onClick ? "transition hover:ring-navy/40 hover:shadow-md" : ""}`}>
-      <span className={`absolute left-0 top-3 bottom-3 w-1 rounded-r ${accent}`} />
-      <div className="pl-2">
-        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{label}</div>
-        <div className="mt-1 text-2xl font-extrabold tabular-nums text-navy">{value}</div>
-        {hint && <div className="mt-0.5 text-xs text-slate-500">{hint}</div>}
+    <Comp onClick={onClick} className={`group rounded-2xl border border-slate-200/80 bg-white p-4 text-left shadow-[0_8px_30px_rgba(15,42,74,0.04)] ${onClick ? "transition duration-200 hover:-translate-y-0.5 hover:border-navy/20 hover:shadow-[0_14px_35px_rgba(15,42,74,0.09)]" : ""}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-500">{label}</div>
+          <div className="mt-2 text-2xl font-black tabular-nums tracking-tight text-navy">{value}</div>
+        </div>
+        {icon && <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconTone}`}><Icon name={icon} className="h-[18px] w-[18px]" /></span>}
       </div>
+      {hint && <div className="mt-2 truncate text-[11px] font-medium text-slate-500">{hint}</div>}
     </Comp>
   );
 }

@@ -4,6 +4,9 @@ import "./redesign.css";
 import "./directory-verify.css";
 import "./client-profile.css";
 import LayoutWrapper from "@/components/LayoutWrapper";
+import IntroSplash from "@/components/IntroSplash";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 
 export const viewport = {
   width: "device-width",
@@ -43,6 +46,12 @@ export default function RootLayout({
       className="h-full antialiased"
     >
       <body className="min-h-full flex flex-col bg-paper text-ink">
+        <IntroSplash
+          clientImage={existsSync(join(process.cwd(), "public/client.jpg")) ? "/client.jpg" : "/client-placeholder.svg"}
+          talentImage={existsSync(join(process.cwd(), "public/talent.jpg")) ? "/talent.jpg" : "/talent-placeholder.svg"}
+          logo="/logo.png"
+          brandName="CertiTask"
+        />
         <LayoutWrapper>{children}</LayoutWrapper>
       </body>
     </html>
