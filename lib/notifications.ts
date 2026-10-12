@@ -13,6 +13,7 @@ export type NotificationType =
   | "team.declined"
   | "team.removed"
   | "team.left"
+  | "chat.message"
   | "deadline.reminder"
   | "billing.activated"
   | "billing.expired"

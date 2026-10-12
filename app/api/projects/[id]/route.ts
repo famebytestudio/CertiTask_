@@ -134,6 +134,10 @@ export async function PATCH(req: Request, { params }: Params) {
       updated = await prisma.$transaction(async (tx) => {
         const u = await tx.project.update({ where: { id, status: project.status }, data, include: projectListInclude });
         await audit(auth, data.status ? "project.status_changed" : "project.updated", "project", id, { from: project.status, to: u.status, fields: Object.keys(data) }, tx);
+        if (u.status === "CLOSED" || u.status === "COMPLETED") {
+          const room = await tx.chatRoom.update({ where: { projectId: id }, data: { status: "LOCKED", lockedAt: new Date() } }).catch(() => null);
+          if (room) await tx.chatMessage.create({ data: { roomId: room.id, clientId: `system:project-${u.status.toLowerCase()}:${id}`, type: "SYSTEM", body: `Project ${u.status.toLowerCase()}. This chat is now read-only.` } });
+        }
         if (!publishing) return u;
         await consumePost(tx, auth.userId, id);
         return tx.project.findUniqueOrThrow({ where: { id }, include: projectListInclude }); // picks up the plan link
