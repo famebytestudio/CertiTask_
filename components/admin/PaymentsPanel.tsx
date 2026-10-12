@@ -43,13 +43,13 @@ export function PaymentsPanel({ query, setQuery, onChanged, openUser }: { query:
     const r = await adminApi<{ status?: string }>(`/api/admin/payments/${p.id}`, "PATCH", { action, reason });
     setBusy(null);
     if (!r.ok) { toast("error", r.error ?? "Failed"); return; }
-    toast("success", action === "REFUND" ? "Marked refunded; subscription ended" : `Re-checked with Safepay: ${humanize(r.data?.status ?? "unknown")}`);
+    toast("success", action === "REFUND" ? "Marked refunded; subscription ended" : `Payment status: ${humanize(r.data?.status ?? "unknown")}`);
     await load(); onChanged();
   }
 
   return (
     <div>
-      <PageHeader title="Payments" subtitle="Plan purchases via Safepay. Amounts in USD; Safepay settles PKR." actions={<Button variant="secondary" icon="download" onClick={() => window.open("/api/admin/payments?format=csv", "_blank")}>Export CSV</Button>} />
+      <PageHeader title="Payment history" subtitle="Historical plan payments. New online purchases are currently disabled." actions={<Button variant="secondary" icon="download" onClick={() => window.open("/api/admin/payments?format=csv", "_blank")}>Export CSV</Button>} />
       {data && (
         <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <StatCard label="Revenue (paid)" value={usd(data.totals.revenueCents)} tone="success" />
@@ -58,7 +58,7 @@ export function PaymentsPanel({ query, setQuery, onChanged, openUser }: { query:
         </div>
       )}
       <Toolbar>
-        <SearchInput value={q} onChange={setQ} placeholder="Receipt, client or Safepay ref…" className="w-full sm:w-72" />
+        <SearchInput value={q} onChange={setQ} placeholder="Receipt, client or provider reference…" className="w-full sm:w-72" />
         <Select aria-label="Status" value={query.status ?? ""} onChange={v => setQuery({ ...query, status: v || undefined, page: undefined })} options={[{ value: "", label: "All except cancelled" }, { value: "SUCCEEDED", label: "Paid" }, { value: "PENDING", label: "Pending" }, { value: "FAILED", label: "Failed" }, { value: "REFUNDED", label: "Refunded" }, { value: "CANCELLED", label: "Cancelled" }]} />
       </Toolbar>
       <Table busy={loading} head={<><Th>Client</Th><Th>Plan</Th><Th>Amount</Th><Th>Status</Th><Th>Receipt / ref</Th><Th>Created</Th><Th right>Actions</Th></>} minWidth={900}>
@@ -74,7 +74,6 @@ export function PaymentsPanel({ query, setQuery, onChanged, openUser }: { query:
             <Td className="whitespace-nowrap text-xs text-slate-500">{fmtDateTime(p.createdAt)}</Td>
             <Td right>
               <div className="flex justify-end gap-1">
-                {p.status === "PENDING" && <Button size="sm" variant="secondary" icon="refresh" loading={busy === p.id} onClick={() => act(p, "RECHECK")}>Re-check</Button>}
                 {p.status === "SUCCEEDED" && <Button size="sm" variant="secondary" className="text-red-700 ring-red-300 hover:bg-red-50" loading={busy === p.id} onClick={() => act(p, "REFUND")}>Mark refunded</Button>}
               </div>
             </Td>

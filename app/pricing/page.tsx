@@ -33,7 +33,7 @@ export default function PricingPage() {
 
         <section className="mt-20 grid gap-5 border-t border-navy/10 pt-12 md:grid-cols-3">
           <div><div className="mb-3 text-2xl">01</div><h3 className="font-bold text-navy">Pay once, use freely</h3><p className="mt-2 text-sm leading-6 text-ink-muted">Every plan is prepaid for {PERIOD_DAYS} days. There are no automatic charges.</p></div>
-          <div><div className="mb-3 text-2xl">02</div><h3 className="font-bold text-navy">Checkout stays secure</h3><p className="mt-2 text-sm leading-6 text-ink-muted">Safepay handles cards, Google Pay, and Pakistani wallets. CertiTask never stores card details.</p></div>
+          <div><div className="mb-3 text-2xl">02</div><h3 className="font-bold text-navy">Compare every plan</h3><p className="mt-2 text-sm leading-6 text-ink-muted">Plan features and prices remain visible while online purchasing is temporarily unavailable.</p></div>
           <div><div className="mb-3 text-2xl">03</div><h3 className="font-bold text-navy">Change when ready</h3><p className="mt-2 text-sm leading-6 text-ink-muted">Upgrade from your dashboard any time. Your plan history and receipts stay available.</p></div>
         </section>
 

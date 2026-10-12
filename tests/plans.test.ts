@@ -16,11 +16,11 @@ test("Talent catalog advertises the enforced 6, 9, and 15 request limits without
   assert.equal(planForAudience("PRO", "CLIENT").postLimit, null);
 });
 
-test("Production readiness catches localhost, missing distributed limits, sandbox billing, and invalid prices", () => {
-  const errors = environmentErrors({ DATABASE_URL: "postgresql://user:pass@db.test/db?sslmode=verify-full", JWT_SECRET: "x".repeat(32), APP_URL: "http://localhost:3000", SAFEPAY_ENV: "sandbox", PLAN_PRICE_STARTER_CENTS: "12.5" }, true);
+test("Production readiness catches localhost, missing distributed limits, and invalid prices without requiring a payment provider", () => {
+  const errors = environmentErrors({ DATABASE_URL: "postgresql://user:pass@db.test/db?sslmode=verify-full", JWT_SECRET: "x".repeat(32), APP_URL: "http://localhost:3000", PLAN_PRICE_STARTER_CENTS: "12.5" }, true);
   assert.ok(errors.some(error => error.includes("HTTPS")));
   assert.ok(errors.some(error => error.includes("UPSTASH_REDIS_REST_TOKEN")));
-  assert.ok(errors.some(error => error.includes("SAFEPAY_ENV")));
+  assert.ok(!errors.some(error => error.includes("SAFEPAY")));
   assert.ok(errors.some(error => error.includes("PLAN_PRICE_STARTER_CENTS")));
 });
 

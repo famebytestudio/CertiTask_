@@ -29,10 +29,8 @@ export function environmentErrors(env, production = false) {
   } else if (production) requireValue("APP_URL");
 
   if (production) {
-    for (const key of ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "EMAIL_FROM", "SUPER_ADMIN_EMAIL", "SUPER_ADMIN_PASSWORD_HASH", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN", "CRON_SECRET", "SAFEPAY_PUBLIC_KEY", "SAFEPAY_SECRET_KEY", "SAFEPAY_WEBHOOK_SECRET"]) requireValue(key);
+    for (const key of ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "EMAIL_FROM", "SUPER_ADMIN_EMAIL", "SUPER_ADMIN_PASSWORD_HASH", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN", "CRON_SECRET"]) requireValue(key);
     if (env.SUPER_ADMIN_PASSWORD_HASH && !/^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(env.SUPER_ADMIN_PASSWORD_HASH)) errors.push("SUPER_ADMIN_PASSWORD_HASH must be a valid bcrypt hash (paste the unescaped hash in Vercel)");
-    if (env.SAFEPAY_ENV !== "production") errors.push("SAFEPAY_ENV must be production for a production launch");
-    if (env.SAFEPAY_BASE_URL && env.SAFEPAY_BASE_URL.replace(/\/$/, "") !== "https://api.getsafepay.com") errors.push("SAFEPAY_BASE_URL must use the production Safepay endpoint");
     if (env.CRON_SECRET && env.CRON_SECRET.length < 32) errors.push("CRON_SECRET must contain at least 32 characters");
   }
   if (Boolean(env.GOOGLE_CLIENT_ID) !== Boolean(env.GOOGLE_CLIENT_SECRET)) errors.push("Configure both Google OAuth variables together");

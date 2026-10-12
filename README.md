@@ -2,13 +2,13 @@
 
 CertiTask connects clients with talent through real projects, team applications, deliverable review, and publicly verifiable certificates.
 
-Built with Next.js App Router, React, TypeScript, Prisma 7, PostgreSQL/Neon, HTTP-only JWT sessions backed by database sessions, SMTP email, Upstash rate limiting, and Safepay hosted checkout.
+Built with Next.js App Router, React, TypeScript, Prisma 7, PostgreSQL/Neon, HTTP-only JWT sessions backed by database sessions, SMTP email, and Upstash rate limiting.
 
 ## Features
 
 - **Clients:** individual/organization profiles, email and identity verification, draft/published projects, team application selection, submission feedback, certificate issuance and revocation, project analytics and plan entitlements.
 - **Talent:** editable profiles and photos, skills/education/portfolio/resume links, solo and team applications, invitations, deliverable submission and resubmission, held certificates released after identity verification, certificate PDF downloads and sharing.
-- **Billing:** prepaid 30-day plans for both roles, server-controlled prices, verified provider captures, payment history and PDF receipts, refunds, expiry reminders, free quotas and paid limits.
+- **Plans:** prepaid 30-day plan options for both roles remain visible for comparison. Online purchasing is temporarily disabled; existing subscription and payment history remains readable.
 - **Administration:** identity review, account suspension/session revocation, project and certificate moderation, payment review, contact messages, search, and audit history.
 - **Operations:** private document storage and retention, daily maintenance, distributed production rate limits, origin protection, security headers, environment checks, CI, and regression tests.
 - **Project chat:** a private two-party room is created atomically when a client selects an application. Messages support realtime catch-up, cursor history, unread/read state, replies, edits, soft deletion, reactions, search, mute/block/report controls, and private attachments. Closed/completed projects retain a read-only history.
@@ -53,7 +53,7 @@ Follow [DEPLOYMENT.md](./DEPLOYMENT.md) for root-directory settings, production 
 npm run check:env -- --production
 ```
 
-The production deployment build fails with named configuration errors if required launch settings are missing. Preview deployments should use a separate database and Safepay sandbox credentials. Database schema changes are committed as migrations; do not use `prisma db push` as the production deployment process.
+The production deployment build fails with named configuration errors if required launch settings are missing. Preview deployments should use a separate database. Database schema changes are committed as migrations; do not use `prisma db push` as the production deployment process.
 
 ## Main directories
 

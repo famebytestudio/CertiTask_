@@ -11,8 +11,8 @@ export interface PlanCatalogItem {
  * Plan comparison cards, used by /pricing and the in-dashboard picker.
  * `current` marks the active plan; `onChoose` (when given) turns cards into buttons.
  */
-export function PlanCards({ plans, current, onChoose, busy, compact, quotaLabel = "project post" }: {
-  plans: PlanCatalogItem[]; current?: PlanTier | null; onChoose?: (tier: PlanTier) => void; busy?: PlanTier | null; compact?: boolean; quotaLabel?: string;
+export function PlanCards({ plans, current, onChoose, busy, compact, displayOnly = false, quotaLabel = "project post" }: {
+  plans: PlanCatalogItem[]; current?: PlanTier | null; onChoose?: (tier: PlanTier) => void; busy?: PlanTier | null; compact?: boolean; displayOnly?: boolean; quotaLabel?: string;
 }) {
   const rank: Record<PlanTier, number> = { STARTER: 1, GROWTH: 2, PRO: 3 };
   return (
@@ -32,7 +32,8 @@ export function PlanCards({ plans, current, onChoose, busy, compact, quotaLabel 
             <ul style={{ listStyle: "none", padding: 0, margin: "0 0 16px", display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
               {p.perks.map(k => <li key={k} style={{ fontSize: 13, color: "var(--ink-muted)", display: "flex", gap: 8 }}><span style={{ color: "var(--success)", fontWeight: 800 }}>✓</span>{quotaLabel === "project request" ? k.replaceAll("project posts", "project requests") : k}</li>)}
             </ul>
-            {!onChoose && <Link href={`/auth/signup?role=${quotaLabel === "project request" ? "talent" : "client"}`} className="ct-button ct-button-dark">Get started with {p.name} ↗</Link>}
+            {displayOnly && <button disabled style={{ padding: "11px 0", borderRadius: 10, border: "1px solid var(--border)", fontWeight: 800, fontSize: 14, background: "#F7FAFC", color: "var(--ink-muted)", cursor: "not-allowed" }}>Payments coming soon</button>}
+            {!displayOnly && !onChoose && <Link href={`/auth/signup?role=${quotaLabel === "project request" ? "talent" : "client"}`} className="ct-button ct-button-dark">Get started with {p.name} ↗</Link>}
             {onChoose && (
               <button onClick={() => onChoose(p.tier)} disabled={!!busy || lower}
                 style={{ padding: "11px 0", borderRadius: 10, border: "none", fontWeight: 800, fontSize: 14, cursor: busy || lower ? "not-allowed" : "pointer", background: highlight ? "var(--gold)" : "var(--navy)", color: highlight ? "var(--navy)" : "#fff", opacity: busy && busy !== p.tier ? 0.6 : 1 }}>

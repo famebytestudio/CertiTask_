@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
 import { isString } from "@/lib/validation";
-import { BillingError, confirmPayment, markRefunded } from "@/lib/billing";
+import { BillingError, markRefunded } from "@/lib/billing";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -17,10 +17,7 @@ export async function PATCH(req: Request, { params }: Params) {
       await markRefunded(authorization, id, reason.trim());
       return NextResponse.json({ success: true });
     }
-    if (action === "RECHECK") {
-      const r = await confirmPayment(id, "webhook");
-      return NextResponse.json({ success: true, ...r });
-    }
+    if (action === "RECHECK") return NextResponse.json({ error: "Payment integration is disabled" }, { status: 410 });
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });
   } catch (e) {
     if (e instanceof BillingError) return NextResponse.json({ error: e.message }, { status: e.status });

@@ -3,7 +3,6 @@
 import { WorkspaceIcon } from "@/components/dashboard/WorkspaceIcon";
 
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Btn, Notice, SectionHeader, StatusBadge, daysUntil, formatDate } from "@/components/dashboard/ui";
 import { api } from "@/components/dashboard/useDashboardData";
 import { PlanCards, type PlanCatalogItem } from "@/components/billing/PlanCards";
@@ -16,16 +15,8 @@ interface Data { entitlement: Entitlement; subscriptions: Sub[]; payments: Pay[]
 
 const usd = (c: number) => `$${(c / 100).toFixed(c % 100 === 0 ? 0 : 2)}`;
 
-/** Open the new in-app checkout flow before redirecting to Safepay. */
-export async function goToCheckout(tier: PlanTier, navigate: (url: string) => void): Promise<string | null> {
-  navigate(`/checkout?plan=${tier}`);
-  return null;
-}
-
 export function BillingTab({ onChanged, audience = "client" }: { onChanged: () => void; audience?: "client" | "talent" }) {
-  const router = useRouter();
   const [data, setData] = useState<Data | null>(null);
-  const [busy, setBusy] = useState<PlanTier | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
 
@@ -40,11 +31,6 @@ export function BillingTab({ onChanged, audience = "client" }: { onChanged: () =
   const sub = e.subscription;
   const planName = (t: PlanTier | null) => data.plans.find(p => p.tier === t)?.name ?? "—";
 
-  async function choose(tier: PlanTier) {
-    setBusy(tier); setError(null);
-    const err = await goToCheckout(tier, router.push);
-    if (err) { setError(err); setBusy(null); }
-  }
   async function cancel() {
     if (!confirm("Stop renewal reminders? Your plan stays active until the period ends.")) return;
     const r = await api("/api/billing/cancel", "POST");
@@ -57,7 +43,7 @@ export function BillingTab({ onChanged, audience = "client" }: { onChanged: () =
 
   return (
     <div>
-      <SectionHeader icon={<WorkspaceIcon name="billing" />} title="Billing" subtitle={audience === "talent" ? `Your first ${data.freePosts} project requests are free. After that, pick a prepaid ${data.periodDays}-day plan to keep applying. Prices in USD; Safepay settles PKR.` : `Your first ${data.freePosts} published projects are free once verified. After that, pick a prepaid ${data.periodDays}-day plan. Prices in USD; Safepay settles PKR.`} />
+      <SectionHeader icon={<WorkspaceIcon name="billing" />} title="Plans" subtitle={audience === "talent" ? `Your first ${data.freePosts} project requests are free. Paid plans are shown for comparison while online payments are temporarily unavailable.` : `Your first ${data.freePosts} published projects are free once verified. Paid plans are shown for comparison while online payments are temporarily unavailable.`} />
       {error && <Notice kind="error">{error}</Notice>}
       {info && <Notice kind="success">{info}</Notice>}
 
@@ -89,7 +75,8 @@ export function BillingTab({ onChanged, audience = "client" }: { onChanged: () =
       <h3 style={{ fontSize: 15, fontWeight: 700, color: "var(--navy)", margin: "0 0 14px" }}>{sub ? "Upgrade or renew" : "Choose a plan"}</h3>
       {!e.verified && <Notice kind="warning">Plans can be bought once your account is verified.</Notice>}
       <div style={{ marginTop: 16, marginBottom: 32 }}>
-        <PlanCards plans={data.plans} current={sub?.plan ?? null} onChoose={e.verified ? choose : undefined} busy={busy} compact quotaLabel={audience === "talent" ? "project request" : undefined} />
+        <Notice kind="warning">Online payments are temporarily unavailable. You can still compare all plans below.</Notice>
+        <div style={{ marginTop: 16 }}><PlanCards plans={data.plans} current={sub?.plan ?? null} displayOnly compact quotaLabel={audience === "talent" ? "project request" : undefined} /></div>
       </div>
       {sub && <p style={{ fontSize: 12, color: "var(--ink-subtle)", marginTop: -20, marginBottom: 28 }}>Upgrading starts a new {data.periodDays}-day period today. To renew the same plan, choose it again in the last 7 days of the period or after it ends.</p>}
 
