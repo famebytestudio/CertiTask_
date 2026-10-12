@@ -23,6 +23,8 @@ export async function GET() {
     const readAt = room.reads[0]?.readAt ?? room.createdAt;
     const unreadCount = await prisma.chatMessage.count({ where: { roomId: room.id, senderId: { not: auth.userId }, createdAt: { gt: readAt } } });
     const { reads: _reads, mutes: _mutes, ...data } = room;
+    void _reads;
+    void _mutes;
     return { ...data, unreadCount, muted: room.mutes.length > 0 };
   }));
 
