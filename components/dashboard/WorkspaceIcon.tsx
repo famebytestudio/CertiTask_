@@ -27,6 +27,7 @@ const paths: Record<string, string> = {
   pause: "M7 4v16M17 4v16",
   play: "m6 3 15 9-15 9Z",
   message: "M3 3h18v14H8l-5 4ZM7 8h10M7 12h7",
+  messages: "M3 3h18v14H8l-5 4ZM7 8h10M7 12h7",
   folder: "M3 5h7l2 3h9v13H3Z",
   warning: "m12 3 10 18H2ZM12 9v5m0 3v1",
   bell: "M18 8a6 6 0 0 0-12 0c0 8-3 8-3 10h18c0-2-3-2-3-10M9 21h6",
