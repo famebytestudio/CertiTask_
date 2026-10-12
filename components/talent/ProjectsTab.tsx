@@ -17,11 +17,10 @@ import {
   daysUntil,
   formatDate,
   inputStyle,
-  selectStyle,
   textareaStyle,
 } from "@/components/dashboard/ui";
 import { api } from "@/components/dashboard/useDashboardData";
-import { PROJECT_CATEGORIES, PROJECT_CATEGORY_LABEL, CLIENT_TYPE_LABEL } from "@/lib/enums";
+import { CLIENT_TYPE_LABEL, PROJECT_CATEGORY_LABEL } from "@/lib/enums";
 import type { ApplicationDto, ProjectDto, SubmissionDto, TeamFullDto } from "@/lib/types";
 import type { TalentTab } from "@/app/talent/dashboard/page";
 import { PlanRequiredModal } from "@/components/client/PlanRequiredModal";
@@ -31,6 +30,7 @@ export function ProjectsTab({
   applications,
   submissions,
   teams,
+  searchQuery,
   onChanged,
   goTo,
 }: {
@@ -38,6 +38,7 @@ export function ProjectsTab({
   applications: ApplicationDto[];
   submissions: SubmissionDto[];
   teams: TeamFullDto[];
+  searchQuery: string;
   onChanged: () => void;
   goTo: (t: TalentTab) => void;
 }) {
@@ -53,9 +54,6 @@ export function ProjectsTab({
   });
   const [teamName, setTeamName] = useState("");
   const [creating, setCreating] = useState(false);
-  const [q, setQ] = useState("");
-  const [category, setCategory] = useState("all");
-  const [filterMode, setFilterMode] = useState<"all" | "teams" | "solo" | "urgent">("all");
   const [applying, setApplying] = useState<ProjectDto | null>(null);
   const [form, setForm] = useState({ teamName: "", pitch: "" });
   const [busy, setBusy] = useState(false);
@@ -63,25 +61,15 @@ export function ProjectsTab({
   const [planModal, setPlanModal] = useState<"PLAN_REQUIRED" | "LIMIT_REACHED" | null>(null);
 
   const visible = useMemo(() => {
-    const needle = q.trim().toLowerCase();
-    return projects.filter(p => {
-      const matchCat = category === "all" || p.category === category;
-      const matchSearch =
-        !needle ||
-        p.title.toLowerCase().includes(needle) ||
-        p.description.toLowerCase().includes(needle) ||
-        p.requiredSkills.some(s => s.toLowerCase().includes(needle)) ||
-        p.client?.name.toLowerCase().includes(needle);
-
-      const days = daysUntil(p.deadline);
-      let matchMode = true;
-      if (filterMode === "teams") matchMode = p.teamCap > 1;
-      else if (filterMode === "solo") matchMode = p.teamCap === 1;
-      else if (filterMode === "urgent") matchMode = days >= 0 && days <= 3;
-
-      return matchCat && matchSearch && matchMode;
-    });
-  }, [projects, q, category, filterMode]);
+    const needle = searchQuery.trim().toLowerCase();
+    return projects.filter(p =>
+      !needle ||
+      p.title.toLowerCase().includes(needle) ||
+      p.description.toLowerCase().includes(needle) ||
+      p.requiredSkills.some(s => s.toLowerCase().includes(needle)) ||
+      p.client?.name.toLowerCase().includes(needle)
+    );
+  }, [projects, searchQuery]);
 
   function appFor(projectId: string) {
     return applications.find(a => a.projectId === projectId && a.status !== "WITHDRAWN");
@@ -151,139 +139,14 @@ export function ProjectsTab({
         }
       />
 
-      {/* Filter and Search Bar */}
-      <div
-        style={{
-          background: "#fff",
-          border: "1px solid var(--border)",
-          borderRadius: 14,
-          padding: 16,
-          marginBottom: 20,
-          boxShadow: "var(--shadow-sm)",
-          display: "flex",
-          flexDirection: "column",
-          gap: 12,
-        }}
-      >
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <div style={{ position: "relative", flex: "1 1 280px" }}>
-            <span
-              style={{
-                position: "absolute",
-                left: 12,
-                top: "50%",
-                transform: "translateY(-50%)",
-                color: "var(--ink-subtle)",
-                fontSize: 14,
-                pointerEvents: "none",
-              }}
-            >
-              <WorkspaceIcon name="projects" />
-            </span>
-            <input
-              id="proj-search"
-              value={q}
-              onChange={e => setQ(e.target.value)}
-              style={{ ...inputStyle(), paddingLeft: 34 }}
-              placeholder="Search by title, required skills, or client name…"
-              aria-label="Search projects"
-            />
-          </div>
-
-          <select
-            id="proj-cat"
-            value={category}
-            onChange={e => setCategory(e.target.value)}
-            style={{ ...selectStyle(), width: "auto", minWidth: 200, cursor: "pointer" }}
-            aria-label="Filter by category"
-          >
-            <option value="all">All Categories ({projects.length})</option>
-            {PROJECT_CATEGORIES.map(c => {
-              const count = projects.filter(p => p.category === c).length;
-              return (
-                <option key={c} value={c}>
-                  {PROJECT_CATEGORY_LABEL[c]} ({count})
-                </option>
-              );
-            })}
-          </select>
-        </div>
-
-        {/* Quick Filter Pills */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", paddingTop: 4 }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-subtle)", marginRight: 4 }}>Quick Filters:</span>
-          {(
-            [
-              { id: "all", label: "All Projects" },
-              { id: "teams", label: "Team Projects" },
-              { id: "solo", label: "Solo Only" },
-              { id: "urgent", label: "Closing Soon (≤3d)" },
-            ] as const
-          ).map(f => (
-            <button
-              key={f.id}
-              onClick={() => setFilterMode(f.id)}
-              style={{
-                padding: "4px 12px",
-                borderRadius: 20,
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: "pointer",
-                border: filterMode === f.id ? "1.5px solid var(--navy)" : "1px solid var(--border)",
-                background: filterMode === f.id ? "var(--navy)" : "#FAFAFA",
-                color: filterMode === f.id ? "#fff" : "var(--ink-muted)",
-                transition: "all 0.15s",
-              }}
-            >
-              {f.label}
-            </button>
-          ))}
-          {(q || category !== "all" || filterMode !== "all") && (
-            <button
-              onClick={() => {
-                setQ("");
-                setCategory("all");
-                setFilterMode("all");
-              }}
-              style={{
-                background: "none",
-                border: "none",
-                color: "#9B2C2C",
-                fontSize: 12,
-                fontWeight: 700,
-                cursor: "pointer",
-                padding: "4px 8px",
-                marginLeft: "auto",
-              }}
-            >
-              Reset Filters ✕
-            </button>
-          )}
-        </div>
-      </div>
-
       {visible.length === 0 ? (
         <EmptyState
           icon={<WorkspaceIcon name="mail" />}
-          title={projects.length === 0 ? "No open projects right now" : "No projects match your search criteria"}
+          title={projects.length === 0 ? "No open projects right now" : "No projects match your search"}
           hint={
             projects.length === 0
               ? "New client projects are posted regularly. Check back soon or ensure your profile is up to date."
-              : "Try adjusting your search terms or clearing the selected category filter."
-          }
-          action={
-            (q || category !== "all" || filterMode !== "all") && (
-              <Btn
-                variant="ghost"
-                onClick={() => {
-                  setQ("");
-                  setCategory("all");
-                  setFilterMode("all");
-                }}
-              >
-                Clear all filters
-              </Btn>
-            )
+              : "Try adjusting your search in the dashboard navigation."
           }
         />
       ) : (

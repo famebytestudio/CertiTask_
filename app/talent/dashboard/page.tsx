@@ -2,7 +2,7 @@
 
 import { WorkspaceIcon } from "@/components/dashboard/WorkspaceIcon";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import {
   DashboardShell,
@@ -23,12 +23,14 @@ import { CertificatesTab } from "@/components/talent/CertificatesTab";
 import { ProfileTab } from "@/components/talent/ProfileTab";
 import { TeamsTab } from "@/components/talent/TeamsTab";
 import { BillingTab } from "@/components/client/BillingTab";
+import { ChatWorkspace, useChatUnread } from "@/components/chat/ChatWorkspace";
 
 const TAB_IDS = [
   "overview",
   "projects",
   "teams",
   "applications",
+  "messages",
   "submissions",
   "certificates",
   "billing",
@@ -40,6 +42,8 @@ export type TalentTab = (typeof TAB_IDS)[number];
 function TalentDashboard() {
   const { data, loading, error, refresh } = useDashboardData();
   const [tab, setTab] = useTabParam<TalentTab>(TAB_IDS, "overview");
+  const [searchQuery, setSearchQuery] = useState("");
+  const chatUnread = useChatUnread();
 
   if (loading) return <LoadingScreen text="Loading your talent workspace…" />;
   if (error || !data) return <LoadingScreen text={error ?? "Unable to load dashboard data."} />;
@@ -53,10 +57,11 @@ function TalentDashboard() {
   const { pct } = profileCompletion(profile);
 
   const tabs: TabDef<TalentTab>[] = [
-    { id: "overview", label: "Overview", icon: <WorkspaceIcon name="overview" /> },
+    { id: "overview", label: "Dashboard", icon: <WorkspaceIcon name="overview" /> },
     { id: "projects", label: "Find Projects", icon: <WorkspaceIcon name="projects" />, badge: projects.length },
     { id: "teams", label: "My Teams", icon: <WorkspaceIcon name="teams" />, badge: pendingInvites, badgeColor: "#97640E" },
     { id: "applications", label: "My Applications", icon: <WorkspaceIcon name="applications" />, badge: applications.length > 0 ? applications.length : undefined },
+    { id: "messages", label: "Messages", icon: <WorkspaceIcon name="messages" />, badge: chatUnread, badgeColor: "#C9A227" },
     { id: "submissions", label: "My Submissions", icon: <WorkspaceIcon name="submissions" />, badge: needsSubmission, badgeColor: "#E53E3E" },
     {
       id: "certificates",
@@ -83,7 +88,7 @@ function TalentDashboard() {
     },
     {
       label: "Work & Deliverables",
-      tabIds: ["applications", "submissions", "certificates"],
+      tabIds: ["applications", "messages", "submissions", "certificates"],
     },
     {
       label: "Account & Settings",
@@ -138,9 +143,10 @@ function TalentDashboard() {
       activeTab={tab}
       onTabChange={setTab}
       onSignOut={signOut}
-      searchPlaceholder="Search projects, skills, or clients…"
+      searchQuery={searchQuery}
+      onSearchQueryChange={setSearchQuery}
       onSearchClick={() => setTab("projects")}
-      bottomNavTabs={["overview", "projects", "teams", "submissions", "certificates"]}
+      bottomNavTabs={["overview", "projects", "teams", "submissions"]}
       banner={<EmailBanner email={profile.email} verified={!!profile.emailVerifiedAt} onVerify={() => setTab("verification")} />}
       headerActions={
         <>
@@ -205,12 +211,14 @@ function TalentDashboard() {
           applications={applications}
           submissions={submissions}
           teams={teams}
+          searchQuery={searchQuery}
           onChanged={refresh}
           goTo={setTab}
         />
       )}
       {tab === "teams" && <TeamsTab teams={teams} meId={profile.id} onChanged={refresh} goTo={setTab} />}
       {tab === "applications" && <ApplicationsTab applications={applications} onChanged={refresh} goTo={setTab} />}
+      {tab === "messages" && <ChatWorkspace userId={profile.id} />}
       {tab === "submissions" && <SubmissionsTab applications={applications} submissions={submissions} onChanged={refresh} />}
       {tab === "certificates" && (
         <CertificatesTab

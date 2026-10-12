@@ -32,7 +32,6 @@ export function ApplicationsTab({
   goTo?: (t: ClientTab) => void;
 }) {
   const [verifiedOnly, setVerifiedOnly] = useState(false);
-  const [skill, setSkill] = useState("");
   const [minTeam, setMinTeam] = useState(1);
   const [filter, setFilter] = useState<string>("all");
   const [statusTab, setStatusTab] = useState<"all" | "PENDING" | "SHORTLISTED" | "SELECTED" | "REJECTED">("all");
@@ -58,10 +57,9 @@ export function ApplicationsTab({
       const members = a.team.members.filter(m => m.status === "ACCEPTED");
       if (verifiedOnly && !members.every(m => m.user.verificationStatus === "VERIFIED")) return false;
       if (members.length < minTeam) return false;
-      if (skill.trim() && !a.pitch.toLowerCase().includes(skill.trim().toLowerCase())) return false;
       return true;
     });
-  }, [applications, filter, statusTab, filtersEnabled, verifiedOnly, minTeam, skill]);
+  }, [applications, filter, statusTab, filtersEnabled, verifiedOnly, minTeam]);
 
   async function decide(id: string, status: "SHORTLISTED" | "SELECTED" | "REJECTED") {
     setError(null);
@@ -197,13 +195,6 @@ export function ApplicationsTab({
             />
           </label>
 
-          <input
-            id="f-pitch"
-            value={skill}
-            onChange={e => setSkill(e.target.value)}
-            placeholder="Keyword in pitch… (e.g. Next.js)"
-            style={{ flex: "1 1 180px", padding: "6px 10px", border: "1px solid var(--border)", borderRadius: 6, background: "#fff", fontSize: 12 }}
-          />
         </div>
       ) : (
         <div
@@ -222,7 +213,7 @@ export function ApplicationsTab({
             flexWrap: "wrap",
           }}
         >
-          <span><WorkspaceIcon name="sparkles" /> <strong>Growth &amp; Pro Feature:</strong> Filter applicants by verified ID status, team size threshold, and pitch technology keywords.</span>
+          <span><WorkspaceIcon name="sparkles" /> <strong>Growth &amp; Pro Feature:</strong> Filter applicants by verified ID status and team size threshold.</span>
           {goTo && (
             <button
               onClick={() => goTo("billing")}

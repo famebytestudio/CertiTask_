@@ -3,6 +3,7 @@
 import { WorkspaceIcon } from "@/components/dashboard/WorkspaceIcon";
 
 import { Suspense } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
   DashboardShell,
@@ -24,12 +25,14 @@ import { SubmissionsTab } from "@/components/client/SubmissionsTab";
 import { CertificatesTab } from "@/components/client/CertificatesTab";
 import { ProfileTab } from "@/components/client/ProfileTab";
 import { BillingTab } from "@/components/client/BillingTab";
+import { ChatWorkspace, useChatUnread } from "@/components/chat/ChatWorkspace";
 
 const TAB_IDS = [
   "overview",
   "post-project",
   "projects",
   "applications",
+  "messages",
   "submissions",
   "certificates",
   "verification",
@@ -41,6 +44,8 @@ export type ClientTab = (typeof TAB_IDS)[number];
 function ClientDashboard() {
   const { data, loading, error, refresh } = useDashboardData();
   const [tab, setTab] = useTabParam<ClientTab>(TAB_IDS, "overview");
+  const [searchQuery, setSearchQuery] = useState("");
+  const chatUnread = useChatUnread();
 
   if (loading) return <LoadingScreen text="Loading your client workspace…" />;
   if (error || !data) return <LoadingScreen text={error ?? "Unable to load client workspace data."} />;
@@ -51,10 +56,11 @@ function ClientDashboard() {
   const activeProjects = projects.filter(p => p.status === "ACTIVE").length;
 
   const tabs: TabDef<ClientTab>[] = [
-    { id: "overview", label: "Overview", icon: <WorkspaceIcon name="overview" /> },
+    { id: "overview", label: "Dashboard", icon: <WorkspaceIcon name="overview" /> },
     { id: "post-project", label: "Post a Project", icon: <WorkspaceIcon name="post" /> },
     { id: "projects", label: "My Projects", icon: <WorkspaceIcon name="rocket" />, badge: activeProjects },
     { id: "applications", label: "Applications", icon: <WorkspaceIcon name="applications" />, badge: pendingApps },
+    { id: "messages", label: "Messages", icon: <WorkspaceIcon name="messages" />, badge: chatUnread, badgeColor: "#C9A227" },
     { id: "submissions", label: "Review Submissions", icon: <WorkspaceIcon name="submissions" />, badge: reviewQueue, badgeColor: "#E53E3E" },
     { id: "certificates", label: "Issued Certificates", icon: <WorkspaceIcon name="certificates" />, badge: certificates.length > 0 ? certificates.length : undefined },
     {
@@ -71,7 +77,7 @@ function ClientDashboard() {
   const tabGroups: TabGroup<ClientTab>[] = [
     {
       label: "Projects & Pipeline",
-      tabIds: ["overview", "post-project", "projects", "applications"],
+      tabIds: ["overview", "post-project", "projects", "applications", "messages"],
     },
     {
       label: "Review & Credentials",
@@ -129,9 +135,10 @@ function ClientDashboard() {
       activeTab={tab}
       onTabChange={setTab}
       onSignOut={signOut}
-      searchPlaceholder="Search projects, applicants, or talent…"
+      searchQuery={searchQuery}
+      onSearchQueryChange={setSearchQuery}
       onSearchClick={() => setTab("projects")}
-      bottomNavTabs={["overview", "post-project", "projects", "applications", "submissions"]}
+      bottomNavTabs={["overview", "projects", "applications", "submissions"]}
       banner={<EmailBanner email={profile.email} verified={!!profile.emailVerifiedAt} onVerify={() => setTab("verification")} />}
       headerActions={
         <>
@@ -206,6 +213,8 @@ function ClientDashboard() {
         <ProjectsTab
           projects={projects}
           applications={applications}
+          searchQuery={searchQuery}
+          onSearchQueryChange={setSearchQuery}
           goTo={setTab}
           onChanged={refresh}
           verified={profile.verificationStatus === "VERIFIED"}
@@ -221,6 +230,7 @@ function ClientDashboard() {
           goTo={setTab}
         />
       )}
+      {tab === "messages" && <ChatWorkspace userId={profile.id} />}
       {tab === "submissions" && <SubmissionsTab submissions={submissions} onChanged={refresh} />}
       {tab === "certificates" && <CertificatesTab certificates={certificates} onChanged={refresh} />}
       {tab === "verification" && <VerificationTab profile={profile} onChanged={refresh} />}

@@ -353,6 +353,7 @@ export function ChatWorkspace({ userId }: { userId: string }) {
               </span>
               <span>
                 <span className={styles.roomName}>{person.name}</span>
+                <span className={styles.roomProject}>{item.project.title}</span>
                 <span className={styles.preview}>
                   {item.messages[0]?.deletedAt
                     ? "Message deleted"

@@ -12,7 +12,6 @@ import {
   SkillChips,
   StatusBadge,
   formatDate,
-  inputStyle,
 } from "@/components/dashboard/ui";
 import { api } from "@/components/dashboard/useDashboardData";
 import { PROJECT_CATEGORY_LABEL } from "@/lib/enums";
@@ -24,6 +23,8 @@ import { PlanRequiredModal } from "@/components/client/PlanRequiredModal";
 export function ProjectsTab({
   projects,
   applications,
+  searchQuery,
+  onSearchQueryChange,
   goTo,
   onChanged,
   verified,
@@ -31,12 +32,13 @@ export function ProjectsTab({
 }: {
   projects: ProjectDto[];
   applications: ApplicationDto[];
+  searchQuery: string;
+  onSearchQueryChange: (query: string) => void;
   goTo: (t: ClientTab) => void;
   onChanged: () => void;
   verified: boolean;
   features?: { analytics: boolean; featured: boolean };
 }) {
-  const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "ACTIVE" | "DRAFT" | "PAUSED" | "CLOSED">("all");
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -44,7 +46,7 @@ export function ProjectsTab({
   const [planModal, setPlanModal] = useState<"PLAN_REQUIRED" | "LIMIT_REACHED" | null>(null);
 
   const visible = useMemo(() => {
-    const needle = q.trim().toLowerCase();
+    const needle = searchQuery.trim().toLowerCase();
     return projects.filter(p => {
       const matchStatus = statusFilter === "all" || p.status === statusFilter;
       const matchSearch =
@@ -55,7 +57,7 @@ export function ProjectsTab({
 
       return matchStatus && matchSearch;
     });
-  }, [projects, q, statusFilter]);
+  }, [projects, searchQuery, statusFilter]);
 
   async function toggleFeatured(p: ProjectDto) {
     setError(null);
@@ -108,7 +110,7 @@ export function ProjectsTab({
       {editing && <EditProjectModal project={editing} onClose={() => setEditing(null)} onSaved={onChanged} />}
       {planModal && <PlanRequiredModal reason={planModal} onClose={() => setPlanModal(null)} />}
 
-      {/* Filter and Search Bar */}
+      {/* Project Status Filters */}
       {projects.length > 0 && (
         <div
           style={{
@@ -123,31 +125,6 @@ export function ProjectsTab({
             gap: 12,
           }}
         >
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <div style={{ position: "relative", flex: "1 1 260px" }}>
-              <span
-                style={{
-                  position: "absolute",
-                  left: 12,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  color: "var(--ink-subtle)",
-                  fontSize: 14,
-                  pointerEvents: "none",
-                }}
-              >
-                <WorkspaceIcon name="projects" />
-              </span>
-              <input
-                id="client-proj-search"
-                value={q}
-                onChange={e => setQ(e.target.value)}
-                style={{ ...inputStyle(), paddingLeft: 34 }}
-                placeholder="Search projects by title, description or skills…"
-              />
-            </div>
-          </div>
-
           {/* Quick Filter Pills */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", paddingTop: 4 }}>
             <span style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-subtle)", marginRight: 4 }}>Status:</span>
@@ -198,13 +175,13 @@ export function ProjectsTab({
         <EmptyState
           icon={<WorkspaceIcon name="projects" />}
           title="No projects match your filter"
-          hint="Try resetting your search query or selecting a different status filter."
+          hint="Try changing your project search or selecting a different status filter."
           action={
             <Btn
               variant="ghost"
               small
               onClick={() => {
-                setQ("");
+                onSearchQueryChange("");
                 setStatusFilter("all");
               }}
             >

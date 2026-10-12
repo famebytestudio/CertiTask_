@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
@@ -38,7 +38,8 @@ interface Props<T extends string> {
   navId: string;
   banner?: ReactNode;
   children: ReactNode;
-  searchPlaceholder?: string;
+  searchQuery: string;
+  onSearchQueryChange: (query: string) => void;
   onSearchClick?: () => void;
   bottomNavTabs?: T[];
 }
@@ -64,12 +65,14 @@ export function DashboardShell<T extends string>({
   navId,
   banner,
   children,
-  searchPlaceholder,
+  searchQuery,
+  onSearchQueryChange,
   onSearchClick,
   bottomNavTabs,
 }: Props<T>) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -80,6 +83,7 @@ export function DashboardShell<T extends string>({
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k" && onSearchClick) {
         e.preventDefault();
         onSearchClick();
+        searchInputRef.current?.focus();
       }
     };
     document.addEventListener("keydown", onKey);
@@ -92,6 +96,56 @@ export function DashboardShell<T extends string>({
 
   const initial = userName.charAt(0).toUpperCase() || "?";
   const getTab = (id: T) => tabs.find(t => t.id === id);
+  const messagesTab = tabs.find(t => t.id === "messages");
+
+  const renderMessagesButton = () => messagesTab && (
+    <button
+      type="button"
+      onClick={() => onTabChange(messagesTab.id)}
+      aria-label={`${messagesTab.label}${messagesTab.badge ? `, ${messagesTab.badge} unread` : ""}`}
+      aria-current={activeTab === messagesTab.id ? "page" : undefined}
+      title={messagesTab.label}
+      style={{
+        position: "relative",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: 40,
+        height: 40,
+        flex: "0 0 40px",
+        border: activeTab === messagesTab.id ? "1px solid var(--gold)" : "1px solid rgba(255,255,255,0.2)",
+        borderRadius: 10,
+        background: activeTab === messagesTab.id ? "rgba(201,162,39,0.18)" : "rgba(255,255,255,0.08)",
+        color: activeTab === messagesTab.id ? "var(--gold-light)" : "#fff",
+        fontSize: 19,
+        cursor: "pointer",
+      }}
+    >
+      <WorkspaceIcon name="messages" />
+      {!!messagesTab.badge && messagesTab.badge > 0 && (
+        <span
+          style={{
+            position: "absolute",
+            top: -5,
+            right: -5,
+            minWidth: 18,
+            height: 18,
+            padding: "0 5px",
+            borderRadius: 9,
+            background: messagesTab.badgeColor ?? "#C9A227",
+            color: "#071526",
+            fontSize: 10,
+            fontWeight: 800,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {messagesTab.badge > 99 ? "99+" : messagesTab.badge}
+        </span>
+      )}
+    </button>
+  );
 
   return (
     <div
@@ -207,59 +261,43 @@ export function DashboardShell<T extends string>({
             )}
           </div>
 
-          {/* Quick Search Shortcut Pill in Header */}
-          {searchPlaceholder && (
-            <div
-              onClick={onSearchClick}
-              className="mobile-dashboard-header-compact"
+          <div style={{ position: "relative", flex: "1 1 260px", maxWidth: 380 }}>
+            <span
+              aria-hidden="true"
               style={{
-                flex: "0 1 360px",
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.14)",
-                borderRadius: 12,
-                padding: "7px 14px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                color: "rgba(255,255,255,0.6)",
-                fontSize: 13,
-                cursor: onSearchClick ? "pointer" : "default",
-                transition: "all 0.15s",
-              }}
-              onMouseEnter={e => {
-                if (onSearchClick) {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.1)";
-                  e.currentTarget.style.borderColor = "rgba(201,162,39,0.4)";
-                }
-              }}
-              onMouseLeave={e => {
-                if (onSearchClick) {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.06)";
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)";
-                }
+                position: "absolute",
+                left: 13,
+                top: "50%",
+                transform: "translateY(-50%)",
+                color: "var(--gold-light)",
+                pointerEvents: "none",
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 13, color: "var(--gold-light)" }}><WorkspaceIcon name="projects" /></span>
-                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {searchPlaceholder}
-                </span>
-              </div>
-              <span
-                style={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  background: "rgba(255,255,255,0.12)",
-                  padding: "2px 6px",
-                  borderRadius: 6,
-                  color: "rgba(255,255,255,0.75)",
-                  fontFamily: "monospace",
-                }}
-              >
-                ⌘K
-              </span>
-            </div>
-          )}
+              <WorkspaceIcon name="projects" />
+            </span>
+            <input
+              ref={searchInputRef}
+              type="search"
+              value={searchQuery}
+              onChange={e => onSearchQueryChange(e.target.value)}
+              onFocus={onSearchClick}
+              placeholder="Search projects…"
+              aria-label="Search projects"
+              style={{
+                width: "100%",
+                minWidth: 0,
+                padding: "9px 14px 9px 38px",
+                border: "1px solid rgba(255,255,255,0.2)",
+                borderRadius: 10,
+                outline: "none",
+                background: "rgba(255,255,255,0.08)",
+                color: "#fff",
+                fontSize: 13,
+              }}
+            />
+          </div>
+
+          {renderMessagesButton()}
 
           {/* Header Action Items & Profile Hub */}
           <div
@@ -589,7 +627,7 @@ export function DashboardShell<T extends string>({
                     >
                       {group.label}
                     </div>
-                    {group.tabIds.map(tId => {
+                    {group.tabIds.filter(tId => tId !== "messages").map(tId => {
                       const tab = getTab(tId);
                       if (!tab) return null;
                       const isActive = activeTab === tab.id;
@@ -673,7 +711,7 @@ export function DashboardShell<T extends string>({
                   </div>
                 ))
               ) : (
-                tabs.map(tab => {
+                tabs.filter(tab => tab.id !== "messages").map(tab => {
                   const isActive = activeTab === tab.id;
                   return (
                     <button
@@ -819,7 +857,7 @@ export function DashboardShell<T extends string>({
             alignItems: "center",
           }}
         >
-          {bottomNavTabs.map(tId => {
+          {bottomNavTabs.filter(tId => tId !== "messages").map(tId => {
             const tab = getTab(tId);
             if (!tab) return null;
             const isActive = activeTab === tab.id;
