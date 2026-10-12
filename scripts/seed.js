@@ -200,6 +200,7 @@ async function main() {
     for (const ex of existing) {
       // Certificates restrict project deletion on purpose; demo ones are safe to drop.
       await prisma.certificate.deleteMany({ where: { projectId: ex.id } });
+      await prisma.chatRoom.deleteMany({ where: { projectId: ex.id } });
       await prisma.project.delete({ where: { id: ex.id } }); // cascades teams/apps/subs/holds
     }
     projects[def.title] = await prisma.project.create({
@@ -220,6 +221,18 @@ async function main() {
   });
 
   /* ── Flow 2: Bilal applied to the API project, still PENDING ── */
+  await prisma.chatRoom.create({
+    data: {
+      projectId: bakery.id, clientId: acme.id, talentId: ayesha.id,
+      reads: { create: [{ userId: acme.id }, { userId: ayesha.id }] },
+      messages: { create: [
+        { clientId: "seed-system-selected", type: "SYSTEM", body: "Request accepted. This private project chat is now active." },
+        { clientId: "seed-client-welcome", senderId: acme.id, body: "Welcome, Ayesha! Please use this room for project updates and questions." },
+        { clientId: "seed-talent-reply", senderId: ayesha.id, body: "Thanks! I will share the first responsive build here tomorrow." },
+      ] },
+    },
+  });
+
   const api = projects["Internal tools API: audit log endpoints"];
   const bilalTeam = await prisma.team.create({
     data: {

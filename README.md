@@ -11,6 +11,7 @@ Built with Next.js App Router, React, TypeScript, Prisma 7, PostgreSQL/Neon, HTT
 - **Billing:** prepaid 30-day plans for both roles, server-controlled prices, verified provider captures, payment history and PDF receipts, refunds, expiry reminders, free quotas and paid limits.
 - **Administration:** identity review, account suspension/session revocation, project and certificate moderation, payment review, contact messages, search, and audit history.
 - **Operations:** private document storage and retention, daily maintenance, distributed production rate limits, origin protection, security headers, environment checks, CI, and regression tests.
+- **Project chat:** a private two-party room is created atomically when a client selects an application. Messages support realtime catch-up, cursor history, unread/read state, replies, edits, soft deletion, reactions, search, mute/block/report controls, and private attachments. Closed/completed projects retain a read-only history.
 
 The current routes are `/client/dashboard` and `/talent/dashboard`. Older company/student URLs redirect to their current equivalents. Certificates prove an issuer-approved project outcome; they are not a claim of external institutional accreditation.
 
@@ -66,3 +67,13 @@ The production deployment build fails with named configuration errors if require
 | `tests/` | Security, billing concurrency, plan, and deployment regression tests |
 
 `PROFILE_FEATURES.md` and `IMPLEMENTATION_SUMMARY.md` preserve earlier project ideas. Their original company/student naming and simulated CNIC workflow have been superseded by the current client/talent verification implementation.
+
+## Project chat architecture
+
+Apply `20261012120000_project_chat` before testing chat. `npm run seed` creates a selected client/talent pair and a sample conversation; sign in as `projects@acmestudio.pk` or `ayesha.khan@example.com` with `Password123!`.
+
+All REST and event-stream reads derive room membership from the authenticated HTTP-only session. Clients cannot grant themselves access with a room ID. Sends carry a client-generated idempotency ID and are limited to eight messages per ten seconds through the existing Upstash-backed limiter. The authenticated `/api/chats/stream` endpoint provides SSE catch-up and the UI reconnects with exponential backoff.
+
+Attachments are limited to 10 MB, identified from magic bytes, kept in the existing private storage backend, and served only after a fresh membership check. JPEG EXIF/application metadata and PNG metadata chunks are removed. `lib/chat-files.ts` exposes a `VirusScanner` interface; its current implementation is an explicit no-op integration placeholder and must be replaced with ClamAV or a managed scanner before accepting untrusted production uploads. The storage interface can likewise be replaced with S3/R2 signed URLs without changing chat authorization.
+
+`CHAT_CONTACT_POLICY` may be `off`, `warn`, or `block`. Muted rooms suppress message notifications. Administrative transcript access is only available through the audited `/api/admin/chats/:id` route. Chat history is deliberately retained when a project ends; changing that retention policy requires a separate product/privacy decision.
