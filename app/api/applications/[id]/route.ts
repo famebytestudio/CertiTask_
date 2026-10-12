@@ -62,10 +62,46 @@ export async function PATCH(req: Request, { params }: Params) {
       return NextResponse.json({ success: true, withdrawn: true });
     }
 
-    const updated = await prisma.application.update({
-      where: { id },
-      data: { status, reviewedAt: new Date() },
-      include: applicationInclude,
+    if (status === "SELECTED") {
+      const existingRoom = await prisma.chatRoom.findUnique({ where: { projectId: application.projectId } });
+      if (existingRoom && existingRoom.talentId !== application.team.leadId) {
+        return NextResponse.json({ error: "This project already has a selected talent" }, { status: 409 });
+      }
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const result = await tx.application.update({
+        where: { id },
+        data: { status, reviewedAt: new Date() },
+        include: applicationInclude,
+      });
+
+      if (status === "SELECTED") {
+        await tx.chatRoom.upsert({
+          where: { projectId: application.projectId },
+          update: {},
+          create: {
+            projectId: application.projectId,
+            clientId: application.project.clientId,
+            talentId: application.team.leadId,
+            reads: {
+              create: [
+                { userId: application.project.clientId },
+                { userId: application.team.leadId },
+              ],
+            },
+            messages: {
+              create: {
+                clientId: `system:application-selected:${id}`,
+                type: "SYSTEM",
+                body: "Request accepted. This private project chat is now active.",
+              },
+            },
+          },
+        });
+      }
+
+      return result;
     });
     await audit(auth, "application.status_changed", "application", id, { from: application.status, to: status });
     if (auth.role === "CLIENT") {
